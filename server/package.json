@@ -1,0 +1,32 @@
+{
+  "name": "tradeoff-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TradeOff Cloud Run backend: extract, classify, score, booth.",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "audit": "npm audit --audit-level=high --omit=dev",
+    "test": "node --test --experimental-vm-modules"
+  },
+  "dependencies": {
+    "@google-cloud/vertexai": "^1.9.0",
+    "@googlemaps/google-maps-services-js": "^3.4.0",
+    "express": "^4.21.0",
+    "firebase-admin": "^12.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,57 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# next.js build output
+.next/
+**/.next/
+out/
+
+# server build output
+server/dist/
+dist/
+build/
+
+# env files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# testing / coverage
+coverage/
+.nyc_output/
+
+# firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+.firebaserc
+
+# google cloud
+*.gserviceaccount.json
+service-account*.json
+gcp-credentials*.json
+
+# prompt doc
+BUILD_BLUEPRINT.md
+CANDIDATE_CONTENT_BRIEF.md
+PROMPT_LOG.md

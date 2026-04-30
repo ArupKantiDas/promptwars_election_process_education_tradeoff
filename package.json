@@ -1,0 +1,42 @@
+{
+  "name": "tradeoff",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TradeOff — manifesto literacy tool for Indian voters (Anti-Gravity hackathon).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "audit": "npm audit --audit-level=critical --omit=dev",
+    "server:dev": "npm --prefix server run dev",
+    "server:build": "npm --prefix server run build",
+    "server:start": "npm --prefix server start",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "firebase": "^10.13.0",
+    "next": "^14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "overrides": {
+    "undici": "^6.23.0"
+  }
+}

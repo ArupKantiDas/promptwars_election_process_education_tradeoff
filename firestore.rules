@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// TradeOff Firestore security rules.
+// Per spec: users can read/write only users/{uid} and its subcollection.
+// candidates and issues are read-only for authenticated users.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // User profile: { createdAt, state, constituencyId, priorities[] }
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // Saved comparisons subcollection.
+      match /comparisons/{compId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Defensively deny anything else under users/{uid}.
+      match /{path=**} {
+        allow read, write: if false;
+      }
+    }
+
+    // Seeded canonical taxonomy and candidate manifestos: read-only for
+    // authenticated users. Writes happen out of band via admin SDK.
+    match /candidates/{candidateId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    match /issues/{issueId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // Default deny.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
