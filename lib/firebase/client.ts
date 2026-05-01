@@ -2,21 +2,23 @@ import { getApp, getApps, initializeApp, type FirebaseApp, type FirebaseOptions 
 import { getAuth, signInAnonymously, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
-function readConfig(): FirebaseOptions {
-  const cfg: FirebaseOptions = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-  };
-  for (const [k, v] of Object.entries(cfg)) {
-    if (typeof v !== "string" || v.length === 0) {
-      throw new Error(`Missing Firebase config: ${k}`);
-    }
+function readEnv(name: string): string {
+  const value = process.env[name];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(`Missing Firebase config: ${name}`);
   }
-  return cfg;
+  return value;
+}
+
+function readConfig(): FirebaseOptions {
+  return {
+    apiKey: readEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
+    authDomain: readEnv("NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"),
+    projectId: readEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
+    storageBucket: readEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"),
+    messagingSenderId: readEnv("NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
+    appId: readEnv("NEXT_PUBLIC_FIREBASE_APP_ID")
+  };
 }
 
 export function getFirebaseApp(): FirebaseApp {
