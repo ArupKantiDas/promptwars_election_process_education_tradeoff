@@ -55,3 +55,6 @@ gcp-credentials*.json
 BUILD_BLUEPRINT.md
 CANDIDATE_CONTENT_BRIEF.md
 PROMPT_LOG.md
+
+# content
+content/

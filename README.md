@@ -18,11 +18,11 @@ The first is a welfare-expansion candidate emphasizing redistribution, public se
 
 We considered building TradeOff against real Indian manifestos and rejected it for three compounding reasons. Real political data is asymmetric in source quality: major national parties publish polished documents in multiple languages, while smaller regional parties sometimes publish four pages in one. A faithful comparison engine would become a polish-detector, not an idea-detector. Lightly-fictionalized real parties is worse: the moment a viewer recognizes "this fictional party is clearly party X," every analytical output gets re-mapped to the real party, and any prior carried into the modeling gets laundered through the AI's faithful reporting. Recognizability is the bias vector. Archetypes diffused across multiple real parties are not.
 
-The Indian state in our demo is real, with real demographics and real economic conditions. The candidates contest fictional constituencies overlaid on that real geography, with manifestos calibrated to address the actual problems the state actually faces. The realism that lands the demo comes from the setting, not from the characters.
+The Indian state and constituency in our demo are real, with real demographics and real economic conditions. The candidates contest that real constituency, with manifestos calibrated to address the actual problems the state and the constituency actually face. The realism that lands the demo comes from the setting, not from the characters.
 
 ## How it works
 
-The user picks a real Indian state, picks a fictional constituency in that state, and ranks their top five issues from a canonical list of ten policy areas. The four candidate manifestos are authored documents pre-indexed in Vertex AI Search.
+The user picks a real Indian state, picks a real constituency in that state, and ranks their top five issues from a canonical list of ten policy areas. The four candidate manifestos are authored documents pre-indexed in Vertex AI Search.
 
 Behind the matrix, every manifesto runs through a two-pass pipeline. Pass one extracts every commitment from the manifesto without an issue filter. Pass two classifies each extracted commitment against the canonical issue taxonomy using hand-authored synonym lists per issue (women's safety expands to gender violence, Mahila Suraksha, fast-track courts for women, female police representation, and others). This separates extraction from classification and makes the absence-detection in the "What's Missing" panel deterministic rather than asking the model to confidently assert something is not there.
 
