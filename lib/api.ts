@@ -62,3 +62,23 @@ export async function apiScore(
   >("/api/score", { issueId, commitments }, signal);
   return resp.scored;
 }
+
+export type Booth = {
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  directions_url: string;
+};
+
+export async function apiBooth(
+  pincode: string,
+  signal?: AbortSignal
+): Promise<Booth[]> {
+  const resp = await postJson<{ pincode: string }, { booths: Booth[] }>(
+    "/api/booth",
+    { pincode },
+    signal
+  );
+  return resp.booths;
+}
