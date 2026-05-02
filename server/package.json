@@ -6,12 +6,12 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node --env-file=.env.local --env-file-if-exists=../.env.local --import tsx --watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --env-file-if-exists=.env.local dist/index.js",
     "typecheck": "tsc --noEmit",
     "audit": "npm audit --audit-level=high --omit=dev",
-    "seed": "tsx src/scripts/seed.ts",
+    "seed": "node --env-file=.env.local --import tsx src/scripts/seed.ts",
     "test": "node --import tsx --test src/services/missing.test.ts"
   },
   "dependencies": {

@@ -1,3 +1,7 @@
+// TODO Phase 10: migrate from deprecated @google-cloud/vertexai to @google/genai
+// Deprecation date: June 24 2025, removal date: June 24 2026
+// Migration guide: https://cloud.google.com/vertex-ai/generative-ai/docs/deprecations/genai-vertexai-sdk
+
 import { logger } from "../logger.js";
 
 // Per AGENTS.md: "Gemini 2.5 Flash for all model calls." All Gemini access

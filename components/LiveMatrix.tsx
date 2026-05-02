@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Candidate } from "@/lib/types/candidates";
-import type { Issue, IssueId } from "@/lib/types/issues";
+import type { Issue } from "@/lib/types/issues";
 import type {
   CellState,
   ClassifiedCommitment,
@@ -16,14 +16,19 @@ import { MissingPanel, type MissingEntry } from "./MissingPanel";
 
 // Phase 7 — live matrix orchestrator.
 //
-// On mount: fires extract → classify in parallel for all four candidates.
-// Once all four classifications complete, fires /api/score in parallel
-// per priority (each batch contains all four candidates' commitments
-// classified into that issue). Cells stream into the matrix as scores
-// resolve. The "What's Missing" panel renders below once classification
-// completes for all four — derived deterministically from the classify
-// data already in memory (no /api/missing call needed; the same
-// set-difference logic that the server uses is mirrored in lib/missing.ts).
+// One useEffect runs the full pipeline: parallel extract+classify per
+// candidate, then parallel /api/score per priority (each batch contains
+// every (candidate, commitment) pair classified into that issue). Cells
+// stream into the matrix as scores resolve. The "What's Missing" panel
+// renders below once classification completes for all four — derived
+// deterministically on the frontend from the classify data we already
+// have (mirroring the server-side detector in lib/missing.ts).
+//
+// StrictMode-safe: the AbortController is created *inside* the effect, so
+// each invocation gets a fresh one. StrictMode's first cleanup aborts the
+// first controller; the second invocation creates a new controller and
+// proceeds normally. The score phase reads from a local `classifyResults`
+// Map (not React state) so it does not depend on a re-render firing first.
 
 type ClassifyState =
   | { status: "loading" }
@@ -31,8 +36,8 @@ type ClassifyState =
   | { status: "ready"; classified: ClassifiedCommitment[] };
 
 type ScoreState =
-  | { status: "pending" } // classify still in flight
-  | { status: "loading" } // /api/score in flight
+  | { status: "pending" }
+  | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; scored: ScoredCommitment[] };
 
@@ -69,100 +74,89 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     initialScoreState(priorities)
   );
 
-  // One AbortController per component instance, aborted on unmount.
-  const abortRef = useRef<AbortController | null>(null);
-  if (abortRef.current === null) abortRef.current = new AbortController();
-  // Tracks which issues have already had a score call kicked off, so the
-  // score-effect (which re-runs as classify state evolves) does not double-fire.
-  const scoreKickedOffRef = useRef<Set<IssueId>>(new Set());
-
   useEffect(() => {
-    const controller = abortRef.current;
-    return () => {
-      controller?.abort();
-    };
-  }, []);
+    const controller = new AbortController();
 
-  // Step 1 — extract → classify in parallel per candidate.
-  useEffect(() => {
-    const signal = abortRef.current?.signal;
-    for (const c of candidates) {
-      void (async () => {
-        try {
-          const extracted = await apiExtract(c.id, signal);
-          const classified = await apiClassify(extracted, signal);
-          if (signal?.aborted === true) return;
-          setClassifyByCandidate((prev) => ({
-            ...prev,
-            [c.id]: { status: "ready", classified }
-          }));
-        } catch (err) {
-          if (signal?.aborted === true) return;
-          const message = err instanceof Error ? err.message : "unknown_error";
-          setClassifyByCandidate((prev) => ({
-            ...prev,
-            [c.id]: { status: "error", message }
-          }));
-        }
-      })();
-    }
-    // candidates is stable (frozen const at module scope); deps only listed for lint.
-  }, [candidates]);
+    async function runPipeline(): Promise<void> {
+      // Phase 1 — parallel extract+classify per candidate. Local Map captures
+      // results so the score phase below can build batches without depending
+      // on React state having flushed.
+      const classifyResults = new Map<string, ClassifiedCommitment[]>();
 
-  // Step 2 — once every candidate's classify resolves (success OR error),
-  // fire /api/score per priority. The score batch for issue X contains every
-  // (candidate, commitment) pair where the commitment was classified into X.
-  // Issues with an empty batch are marked ready immediately (no score call).
-  useEffect(() => {
-    const allClassifyResolved = candidates.every((c) => {
-      const s = classifyByCandidate[c.id];
-      return s?.status === "ready" || s?.status === "error";
-    });
-    if (!allClassifyResolved) return;
-    const signal = abortRef.current?.signal;
-
-    for (const priority of priorities) {
-      if (scoreKickedOffRef.current.has(priority.id)) continue;
-      scoreKickedOffRef.current.add(priority.id);
-
-      const batch: ScoreInputCommitment[] = [];
-      for (const c of candidates) {
-        const cs = classifyByCandidate[c.id];
-        if (cs?.status !== "ready") continue;
-        for (const cm of cs.classified) {
-          if (cm.issueId === priority.id) {
-            batch.push({ candidateId: c.id, text: cm.text, issueId: priority.id });
+      await Promise.all(
+        candidates.map(async (c) => {
+          try {
+            const extracted = await apiExtract(c.id, controller.signal);
+            const classified = await apiClassify(extracted, controller.signal);
+            if (controller.signal.aborted) return;
+            classifyResults.set(c.id, classified);
+            setClassifyByCandidate((prev) => ({
+              ...prev,
+              [c.id]: { status: "ready", classified }
+            }));
+          } catch (err) {
+            if (controller.signal.aborted) return;
+            const message = err instanceof Error ? err.message : "unknown_error";
+            setClassifyByCandidate((prev) => ({
+              ...prev,
+              [c.id]: { status: "error", message }
+            }));
           }
-        }
-      }
-
-      if (batch.length === 0) {
-        setScoreByIssue((prev) => ({
-          ...prev,
-          [priority.id]: { status: "ready", scored: [] }
-        }));
-        continue;
-      }
-
-      setScoreByIssue((prev) => ({ ...prev, [priority.id]: { status: "loading" } }));
-      apiScore(priority.id, batch, signal)
-        .then((scored) => {
-          if (signal?.aborted === true) return;
-          setScoreByIssue((prev) => ({
-            ...prev,
-            [priority.id]: { status: "ready", scored }
-          }));
         })
-        .catch((err: unknown) => {
-          if (signal?.aborted === true) return;
-          const message = err instanceof Error ? err.message : "unknown_error";
-          setScoreByIssue((prev) => ({
-            ...prev,
-            [priority.id]: { status: "error", message }
-          }));
-        });
+      );
+
+      if (controller.signal.aborted) return;
+
+      // Phase 2 — parallel /api/score per priority. Build each batch from the
+      // local Map (skipping candidates whose classify errored out).
+      await Promise.all(
+        priorities.map(async (priority) => {
+          const batch: ScoreInputCommitment[] = [];
+          for (const c of candidates) {
+            const classified = classifyResults.get(c.id);
+            if (classified === undefined) continue;
+            for (const cm of classified) {
+              if (cm.issueId === priority.id) {
+                batch.push({ candidateId: c.id, text: cm.text, issueId: priority.id });
+              }
+            }
+          }
+
+          if (batch.length === 0) {
+            if (controller.signal.aborted) return;
+            setScoreByIssue((prev) => ({
+              ...prev,
+              [priority.id]: { status: "ready", scored: [] }
+            }));
+            return;
+          }
+
+          try {
+            setScoreByIssue((prev) => ({ ...prev, [priority.id]: { status: "loading" } }));
+            const scored = await apiScore(priority.id, batch, controller.signal);
+            if (controller.signal.aborted) return;
+            setScoreByIssue((prev) => ({
+              ...prev,
+              [priority.id]: { status: "ready", scored }
+            }));
+          } catch (err) {
+            if (controller.signal.aborted) return;
+            const message = err instanceof Error ? err.message : "unknown_error";
+            setScoreByIssue((prev) => ({
+              ...prev,
+              [priority.id]: { status: "error", message }
+            }));
+          }
+        })
+      );
     }
-  }, [classifyByCandidate, candidates, priorities]);
+
+    void runPipeline();
+
+    return () => {
+      controller.abort();
+    };
+  }, [candidates, priorities]);
 
   // Derive per-cell display state.
   const cells = useMemo(() => {
@@ -207,7 +201,6 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     return result;
   }, [classifyByCandidate, scoreByIssue, candidates, priorities]);
 
-  // Derive missing-panel data deterministically from the classify output.
   const missingByCandidate = useMemo(() => {
     const top = priorities.slice(0, TOP_PRIORITIES_FOR_MISSING).map((p) => p.id);
     const out: Record<string, MissingEntry[]> = {};
