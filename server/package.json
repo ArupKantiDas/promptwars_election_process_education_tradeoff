@@ -11,6 +11,7 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "audit": "npm audit --audit-level=high --omit=dev",
+    "seed": "tsx src/scripts/seed.ts",
     "test": "node --test --experimental-vm-modules"
   },
   "dependencies": {
@@ -19,6 +20,10 @@
     "express": "^4.21.0",
     "firebase-admin": "^12.5.0",
     "zod": "^3.23.8"
+  },
+  "optionalDependencies": {
+    "@google-cloud/discoveryengine": "^2.0.0",
+    "@google-cloud/storage": "^7.13.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

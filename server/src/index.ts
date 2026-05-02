@@ -5,6 +5,7 @@ import { boothRouter } from "./routes/booth.js";
 import { classifyRouter } from "./routes/classify.js";
 import { extractRouter } from "./routes/extract.js";
 import { scoreRouter } from "./routes/score.js";
+import { warmRouter } from "./routes/warm.js";
 
 const config = loadConfig();
 const app = express();
@@ -20,6 +21,7 @@ app.use("/api/extract", extractRouter);
 app.use("/api/classify", classifyRouter);
 app.use("/api/score", scoreRouter);
 app.use("/api/booth", boothRouter);
+app.use("/api/warm", warmRouter);
 
 app.use((req, res) => {
   res.status(404).json({ error: "not_found", path: req.path });

@@ -1,9 +1,11 @@
 import { BoothLookupForm } from "@/components/BoothLookupForm";
 import { JourneySection } from "@/components/JourneySection";
+import { JourneyWarmup } from "@/components/JourneyWarmup";
 
 export default function JourneyPage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      <JourneyWarmup />
       <header>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Voter journey</h1>
         <p className="mt-2 text-sm text-slate-700">
