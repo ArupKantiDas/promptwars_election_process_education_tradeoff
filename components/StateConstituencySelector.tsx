@@ -10,6 +10,12 @@ type Props = {
   onChange?: (state: string, constituency: string) => void;
 };
 
+const CHEVRON_BG =
+  "bg-[url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M3 4.5l3 3 3-3' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>\")] bg-[length:12px_12px] bg-[right_0.85rem_center] bg-no-repeat";
+
+const SELECT_CLASSES =
+  "mt-1.5 block w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-9 text-[13.5px] font-medium text-slate-900 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500";
+
 export function StateConstituencySelector({
   initialStateCode = DEFAULT_STATE_CODE,
   initialConstituencyId = DEFAULT_CONSTITUENCY_ID,
@@ -32,7 +38,10 @@ export function StateConstituencySelector({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <div>
-        <label htmlFor={stateSelectId} className="block text-xs font-medium uppercase tracking-wide text-slate-600">
+        <label
+          htmlFor={stateSelectId}
+          className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500"
+        >
           State
         </label>
         <select
@@ -47,7 +56,7 @@ export function StateConstituencySelector({
             setConstituencyId(firstC);
             emit(next, firstC);
           }}
-          className="mt-1 block w-full rounded-md border border-slate-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          className={`${SELECT_CLASSES} ${CHEVRON_BG}`}
           aria-describedby={`${stateSelectId}-help`}
         >
           {STATES.map((s) => (
@@ -56,12 +65,15 @@ export function StateConstituencySelector({
             </option>
           ))}
         </select>
-        <p id={`${stateSelectId}-help`} className="mt-1 text-[11px] text-slate-500">
+        <p id={`${stateSelectId}-help`} className="mt-1.5 text-[11px] text-slate-500">
           v1 demo: only West Bengal is wired up.
         </p>
       </div>
       <div>
-        <label htmlFor={constituencySelectId} className="block text-xs font-medium uppercase tracking-wide text-slate-600">
+        <label
+          htmlFor={constituencySelectId}
+          className="block text-[10.5px] font-semibold uppercase tracking-wider text-slate-500"
+        >
           Constituency
         </label>
         <select
@@ -73,7 +85,7 @@ export function StateConstituencySelector({
             setConstituencyId(next);
             emit(stateCode, next);
           }}
-          className="mt-1 block w-full rounded-md border border-slate-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          className={`${SELECT_CLASSES} ${CHEVRON_BG}`}
           aria-describedby={`${constituencySelectId}-help`}
         >
           {(selectedState?.constituencies ?? []).map((c) => (
@@ -82,7 +94,7 @@ export function StateConstituencySelector({
             </option>
           ))}
         </select>
-        <p id={`${constituencySelectId}-help`} className="mt-1 text-[11px] text-slate-500">
+        <p id={`${constituencySelectId}-help`} className="mt-1.5 text-[11px] text-slate-500">
           v1 demo: only Bhabanipur (AC #159) is calibrated.
         </p>
       </div>

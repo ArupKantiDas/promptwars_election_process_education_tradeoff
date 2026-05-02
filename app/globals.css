@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background-color: rgb(30 64 175 / 0.18);
+  }
+}

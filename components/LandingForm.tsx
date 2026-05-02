@@ -10,6 +10,41 @@ import { StateConstituencySelector } from "./StateConstituencySelector";
 const MIN_PRIORITIES_TO_SUBMIT = 3;
 const MAX_PRIORITIES = 5;
 
+type SectionProps = {
+  step: 1 | 2;
+  title: string;
+  caption: string;
+  children: React.ReactNode;
+};
+
+function Section({ step, title, caption, children }: SectionProps) {
+  return (
+    <section
+      aria-labelledby={`landing-section-${step}`}
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-7"
+    >
+      <div className="flex items-baseline gap-3">
+        <span
+          aria-hidden="true"
+          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 font-mono text-[10.5px] font-bold text-white"
+        >
+          {step}
+        </span>
+        <h2
+          id={`landing-section-${step}`}
+          className="text-lg font-semibold tracking-tight text-slate-900"
+        >
+          {title}
+        </h2>
+      </div>
+      <p className="mt-2 max-w-2xl pl-9 text-sm leading-relaxed text-slate-600">
+        {caption}
+      </p>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
 export function LandingForm() {
   const router = useRouter();
   const [stateCode, setStateCode] = useState(DEFAULT_STATE_CODE);
@@ -30,48 +65,50 @@ export function LandingForm() {
   const canSubmit = priorities.length >= MIN_PRIORITIES_TO_SUBMIT;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8" aria-label="Choose your locale and priority issues">
-      <section aria-labelledby="locale-heading" className="rounded-lg border border-slate-200 bg-white p-5">
-        <h2 id="locale-heading" className="text-base font-semibold text-slate-900">
-          Where do you vote?
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          The state and constituency are real. The candidates and their parties contesting them in this demo are fictional.
-        </p>
-        <div className="mt-4">
-          <StateConstituencySelector
-            initialStateCode={stateCode}
-            initialConstituencyId={constituencyId}
-            onChange={(s, c) => {
-              setStateCode(s);
-              setConstituencyId(c);
-            }}
-          />
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      aria-label="Choose your locale and priority issues"
+    >
+      <Section
+        step={1}
+        title="Where do you vote?"
+        caption="The state and constituency are real. The candidates contesting them in this demo are fictional."
+      >
+        <StateConstituencySelector
+          initialStateCode={stateCode}
+          initialConstituencyId={constituencyId}
+          onChange={(s, c) => {
+            setStateCode(s);
+            setConstituencyId(c);
+          }}
+        />
+      </Section>
+      <Section
+        step={2}
+        title={`Rank your top ${MAX_PRIORITIES} issues`}
+        caption={`Add issues you care about, then drag or use the arrow buttons to put them in priority order. Submit with as few as ${MIN_PRIORITIES_TO_SUBMIT}; the matrix will show ${MAX_PRIORITIES} rows but the rest stay empty.`}
+      >
+        <IssueRanker initialPriorities={priorities} onChange={setPriorities} />
+      </Section>
+      <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-card-lifted backdrop-blur sm:flex-nowrap">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold tracking-tight text-slate-900">
+            {canSubmit
+              ? `Ready: ${priorities.length} priority${priorities.length === 1 ? "" : "ies"} selected`
+              : `Add at least ${MIN_PRIORITIES_TO_SUBMIT} priorities to compare`}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            We will run the four candidate manifestos through extraction → classification → scoring as soon as you continue.
+          </p>
         </div>
-      </section>
-      <section aria-labelledby="priorities-heading" className="rounded-lg border border-slate-200 bg-white p-5">
-        <h2 id="priorities-heading" className="text-base font-semibold text-slate-900">
-          Rank your top {MAX_PRIORITIES} issues
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Add issues you care about, then drag or use the buttons to put them in priority order. You can submit with as few as {MIN_PRIORITIES_TO_SUBMIT} selected; the matrix will show {MAX_PRIORITIES} rows but rows beyond your ranked count remain empty.
-        </p>
-        <div className="mt-4">
-          <IssueRanker initialPriorities={priorities} onChange={setPriorities} />
-        </div>
-      </section>
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 bg-white p-5">
-        <p className="text-sm text-slate-600">
-          {canSubmit
-            ? `Ready: ${priorities.length} priority${priorities.length === 1 ? "" : "ies"} selected.`
-            : `Add at least ${MIN_PRIORITIES_TO_SUBMIT} priorities to compare candidates.`}
-        </p>
         <button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+          className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         >
-          Compare candidates →
+          Compare candidates
+          <span aria-hidden="true">→</span>
         </button>
       </div>
     </form>

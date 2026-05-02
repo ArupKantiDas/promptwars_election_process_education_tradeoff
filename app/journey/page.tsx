@@ -5,17 +5,20 @@ import { JourneyWarmup } from "@/components/JourneyWarmup";
 
 export default function JourneyPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="mx-auto max-w-3xl px-6 py-12">
       <JourneyWarmup />
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+      <header className="max-w-2xl">
+        <p className="inline-flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-700 ring-1 ring-slate-900/10">
+          ECI · Voter Journey · Index
+        </p>
+        <h1 className="mt-4 text-[2rem] font-bold leading-tight tracking-tightest text-slate-900 sm:text-[2.4rem]">
           Voter journey
         </h1>
-        <p className="mt-2 text-sm text-slate-700">
+        <p className="mt-3 text-base leading-relaxed text-slate-600">
           The five things you actually need to know between deciding to vote and walking out of the booth. The Election Commission already does most of this work well; we index where they do, and link out. This page is an index, not an encyclopedia.
         </p>
       </header>
-      <div className="mt-6 space-y-4">
+      <div className="mt-10 space-y-5">
         <JourneySection
           step={1}
           title="Am I eligible?"
@@ -44,7 +47,7 @@ export default function JourneyPage() {
         <JourneySection
           step={4}
           title="Where do I vote?"
-          summary="Enter your six-digit pincode below. The backend calls Maps Platform Geocoding to resolve the pincode centroid, then Maps Places Nearby Search for polling stations within 3 km. For your assigned booth (which the ECI determines by EPIC number, not by pincode), cross-check on the official ECI portal — link below the form. The Maps API key stays server-side; the frontend never calls Maps directly."
+          summary="Enter your six-digit pincode below. The backend calls Maps Platform Geocoding to resolve the pincode centroid, then Maps Places Nearby Search for polling stations within 5 km. For your assigned booth (which the ECI determines by EPIC number, not by pincode), cross-check on the official ECI portal — link below the form. The Maps API key stays server-side; the frontend never calls Maps directly."
         >
           <BoothLookupForm />
         </JourneySection>

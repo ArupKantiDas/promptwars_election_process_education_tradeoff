@@ -8,10 +8,24 @@ const MAX_PRIORITIES = 5;
 
 type Props = {
   initialPriorities?: readonly IssueId[];
-  // Called with the ordered list of selected priority IDs whenever the user
-  // changes the ranking. Form-submit handling is the parent's responsibility.
   onChange?: (priorities: readonly IssueId[]) => void;
 };
+
+const DragHandle = () => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 16 16"
+    className="h-4 w-4 text-slate-400 group-hover:text-slate-500"
+    fill="currentColor"
+  >
+    <circle cx="6" cy="4" r="1.2" />
+    <circle cx="6" cy="8" r="1.2" />
+    <circle cx="6" cy="12" r="1.2" />
+    <circle cx="10" cy="4" r="1.2" />
+    <circle cx="10" cy="8" r="1.2" />
+    <circle cx="10" cy="12" r="1.2" />
+  </svg>
+);
 
 export function IssueRanker({ initialPriorities = [], onChange }: Props) {
   const [ranked, setRanked] = useState<readonly IssueId[]>(() =>
@@ -74,35 +88,50 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section aria-labelledby="available-issues-heading">
-        <h3 id="available-issues-heading" className="text-sm font-semibold text-slate-800">
-          Available issues
-        </h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <div className="flex items-baseline justify-between">
+          <h3
+            id="available-issues-heading"
+            className="text-sm font-semibold tracking-tight text-slate-900"
+          >
+            Available issues
+          </h3>
+          <span className="font-mono text-[11px] tabular-nums text-slate-500">
+            {available.length} of {CANONICAL_ISSUES.length}
+          </span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
           {ranked.length < MAX_PRIORITIES
             ? `Add ${MAX_PRIORITIES - ranked.length} more to complete your top ${MAX_PRIORITIES}.`
-            : `You have selected ${MAX_PRIORITIES} priorities. Remove one to add another.`}
+            : `You have selected ${MAX_PRIORITIES}. Remove one to add another.`}
         </p>
         <ul role="list" className="mt-3 space-y-2">
           {available.length === 0 ? (
-            <li className="rounded border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+            <li className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-xs text-slate-500">
               All issues have been added to your ranking.
             </li>
           ) : (
             available.map((i) => (
-              <li key={i.id} className="rounded-md border border-slate-200 bg-white p-3">
-                <div className="flex items-start justify-between gap-2">
+              <li
+                key={i.id}
+                className="group rounded-xl border border-slate-200 bg-white p-3.5 shadow-card transition-all hover:border-slate-300 hover:shadow-card-lifted"
+              >
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-grow">
-                    <h4 className="text-sm font-medium text-slate-900">{i.label}</h4>
-                    <p className="mt-0.5 text-xs leading-snug text-slate-500">{i.description}</p>
+                    <h4 className="text-[13px] font-semibold tracking-tight text-slate-900">
+                      {i.label}
+                    </h4>
+                    <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">
+                      {i.description}
+                    </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => add(i.id)}
                     disabled={ranked.length >= MAX_PRIORITIES}
-                    className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                    className="shrink-0 rounded-md bg-slate-900 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     aria-label={`Add ${i.label} to ranked priorities`}
                   >
-                    Add
+                    + Add
                   </button>
                 </div>
               </li>
@@ -111,20 +140,34 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
         </ul>
       </section>
       <section aria-labelledby="ranked-priorities-heading">
-        <h3 id="ranked-priorities-heading" className="text-sm font-semibold text-slate-800">
-          Your ranked priorities ({ranked.length}/{MAX_PRIORITIES})
-        </h3>
-        <p className="mt-1 text-xs text-slate-500">
-          Drag to reorder, or use the move-up/move-down buttons. Position #1 is your highest priority.
+        <div className="flex items-baseline justify-between">
+          <h3
+            id="ranked-priorities-heading"
+            className="text-sm font-semibold tracking-tight text-slate-900"
+          >
+            Your ranked priorities
+          </h3>
+          <span className="font-mono text-[11px] tabular-nums text-slate-500">
+            {ranked.length} / {MAX_PRIORITIES}
+          </span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+          Drag to reorder, or use the arrow buttons. Position #1 is your highest priority.
         </p>
         <ol role="list" className="mt-3 space-y-2">
           {ranked.length === 0 ? (
-            <li className="rounded border-2 border-dashed border-slate-300 bg-slate-50 p-4 text-center text-xs text-slate-500">
-              No priorities selected yet. Add up to {MAX_PRIORITIES} from the list on the left.
+            <li className="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 p-6 text-center">
+              <p className="text-[13px] font-semibold text-slate-700">
+                No priorities selected yet
+              </p>
+              <p className="mt-1 text-[11.5px] text-slate-500">
+                Add up to {MAX_PRIORITIES} from the list on the left to get started.
+              </p>
             </li>
           ) : (
             ranked.map((id, idx) => {
               const issue = ISSUE_BY_ID[id];
+              const isDragSource = dragSourceIndex === idx;
               return (
                 <li
                   key={id}
@@ -138,27 +181,36 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
                     setDragSourceIndex(null);
                   }}
                   onDragEnd={() => setDragSourceIndex(null)}
-                  className="cursor-grab rounded-md border border-slate-200 bg-white p-3 active:cursor-grabbing"
+                  className={`group cursor-grab rounded-xl border bg-white p-3.5 shadow-card transition-all active:cursor-grabbing ${
+                    isDragSource
+                      ? "border-blue-400 ring-2 ring-blue-100 opacity-60"
+                      : "border-slate-200 hover:border-slate-300 hover:shadow-card-lifted"
+                  }`}
                   aria-label={`Priority ${idx + 1}: ${issue.label}`}
                 >
                   <div className="flex items-start gap-3">
+                    <DragHandle />
                     <span
                       aria-hidden="true"
-                      className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700"
+                      className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-b from-blue-600 to-blue-700 font-mono text-[11px] font-bold text-white shadow-sm"
                     >
                       {idx + 1}
                     </span>
                     <div className="min-w-0 flex-grow">
-                      <h4 className="text-sm font-medium text-slate-900">{issue.label}</h4>
-                      <p className="mt-0.5 text-xs leading-snug text-slate-500">{issue.description}</p>
+                      <h4 className="text-[13px] font-semibold tracking-tight text-slate-900">
+                        {issue.label}
+                      </h4>
+                      <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500">
+                        {issue.description}
+                      </p>
                     </div>
                   </div>
-                  <div className="mt-2 flex items-center justify-end gap-1">
+                  <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-slate-100 pt-2.5">
                     <button
                       type="button"
                       onClick={() => moveUp(idx)}
                       disabled={idx === 0}
-                      className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                      className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                       aria-label={`Move ${issue.label} up`}
                     >
                       ↑ Up
@@ -167,7 +219,7 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
                       type="button"
                       onClick={() => moveDown(idx)}
                       disabled={idx === ranked.length - 1}
-                      className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                      className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                       aria-label={`Move ${issue.label} down`}
                     >
                       ↓ Down
@@ -175,7 +227,7 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
                     <button
                       type="button"
                       onClick={() => remove(id)}
-                      className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-xs text-red-700 hover:bg-red-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                      className="rounded-md border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700 transition-colors hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
                       aria-label={`Remove ${issue.label} from ranking`}
                     >
                       Remove

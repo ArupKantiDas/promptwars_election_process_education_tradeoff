@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Candidate } from "@/lib/types/candidates";
 import type { Issue } from "@/lib/types/issues";
 import type {
@@ -9,10 +9,12 @@ import type {
   ScoreInputCommitment
 } from "@/lib/types/pipeline";
 import { DIMENSION_ORDER, type ScoredCommitment } from "@/lib/types/scoring";
-import { apiClassify, apiExtract, apiScore } from "@/lib/api";
+import { apiClassifyBatched, apiExtract, apiScore } from "@/lib/api";
 import { computeMissingForCandidate } from "@/lib/missing";
+import { ElectionFacts } from "./ElectionFacts";
 import { MatrixGrid } from "./MatrixGrid";
 import { MissingPanel, type MissingEntry } from "./MissingPanel";
+import { PipelineProgress } from "./PipelineProgress";
 
 // Phase 7 — live matrix orchestrator.
 //
@@ -30,6 +32,11 @@ import { MissingPanel, type MissingEntry } from "./MissingPanel";
 // proceeds normally. The score phase reads from a local `classifyResults`
 // Map (not React state) so it does not depend on a re-render firing first.
 
+type ExtractState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; count: number };
+
 type ClassifyState =
   | { status: "loading" }
   | { status: "error"; message: string }
@@ -40,6 +47,8 @@ type ScoreState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; scored: ScoredCommitment[] };
+
+export type PhaseStatus = "pending" | "loading" | "ready" | "error";
 
 type Props = {
   candidates: readonly Candidate[];
@@ -52,6 +61,12 @@ function sumDimensions(c: ScoredCommitment): number {
   let s = 0;
   for (const d of DIMENSION_ORDER) s += c.dimensions[d].score;
   return s;
+}
+
+function initialExtractState(candidates: readonly Candidate[]): Record<string, ExtractState> {
+  const out: Record<string, ExtractState> = {};
+  for (const c of candidates) out[c.id] = { status: "loading" };
+  return out;
 }
 
 function initialClassifyState(candidates: readonly Candidate[]): Record<string, ClassifyState> {
@@ -67,27 +82,48 @@ function initialScoreState(priorities: readonly Issue[]): Record<string, ScoreSt
 }
 
 export function LiveMatrix({ candidates, priorities }: Props) {
+  const [extractByCandidate, setExtractByCandidate] = useState<Record<string, ExtractState>>(
+    () => initialExtractState(candidates)
+  );
   const [classifyByCandidate, setClassifyByCandidate] = useState<Record<string, ClassifyState>>(
     () => initialClassifyState(candidates)
   );
   const [scoreByIssue, setScoreByIssue] = useState<Record<string, ScoreState>>(() =>
     initialScoreState(priorities)
   );
+  const [firstCellScored, setFirstCellScored] = useState(false);
+
+  // Pipeline timing instrumentation. pipelineStartRef captures the moment
+  // the effect runs (= first extract call); firstScoredAtRef captures the
+  // moment the first scored cell becomes visible. Logged once per mount.
+  const pipelineStartRef = useRef<number | null>(null);
+  const firstScoredLoggedRef = useRef<boolean>(false);
 
   useEffect(() => {
     const controller = new AbortController();
+    pipelineStartRef.current = performance.now();
+    firstScoredLoggedRef.current = false;
 
     async function runPipeline(): Promise<void> {
       // Phase 1 — parallel extract+classify per candidate. Local Map captures
       // results so the score phase below can build batches without depending
-      // on React state having flushed.
+      // on React state having flushed. Classify is sub-batched on the
+      // frontend (3 parallel /api/classify calls per candidate) so a single
+      // candidate's classify completes in ~1/3 the wall time of one large
+      // call. The server contract is unchanged — each sub-batch is a normal
+      // /api/classify request.
       const classifyResults = new Map<string, ClassifiedCommitment[]>();
 
       await Promise.all(
         candidates.map(async (c) => {
           try {
             const extracted = await apiExtract(c.id, controller.signal);
-            const classified = await apiClassify(extracted, controller.signal);
+            if (controller.signal.aborted) return;
+            setExtractByCandidate((prev) => ({
+              ...prev,
+              [c.id]: { status: "ready", count: extracted.length }
+            }));
+            const classified = await apiClassifyBatched(extracted, controller.signal);
             if (controller.signal.aborted) return;
             classifyResults.set(c.id, classified);
             setClassifyByCandidate((prev) => ({
@@ -97,6 +133,11 @@ export function LiveMatrix({ candidates, priorities }: Props) {
           } catch (err) {
             if (controller.signal.aborted) return;
             const message = err instanceof Error ? err.message : "unknown_error";
+            setExtractByCandidate((prev) => {
+              const cur = prev[c.id];
+              if (cur?.status === "ready") return prev;
+              return { ...prev, [c.id]: { status: "error", message } };
+            });
             setClassifyByCandidate((prev) => ({
               ...prev,
               [c.id]: { status: "error", message }
@@ -222,8 +263,75 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     (c) => classifyByCandidate[c.id]?.status === "ready"
   );
 
+  // Detect first-scored-cell once per mount. Drives both the perf log and
+  // the conditional collapse of the PipelineProgress / ElectionFacts panel.
+  useEffect(() => {
+    if (firstCellScored) return;
+    if (pipelineStartRef.current === null) return;
+    let firstFound = false;
+    for (const issue of priorities) {
+      for (const c of candidates) {
+        if (cells[issue.id]?.[c.id]?.kind === "scored") {
+          firstFound = true;
+          break;
+        }
+      }
+      if (firstFound) break;
+    }
+    if (!firstFound) return;
+    if (!firstScoredLoggedRef.current) {
+      const elapsedMs = performance.now() - pipelineStartRef.current;
+      firstScoredLoggedRef.current = true;
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[livematrix-perf] first scored cell at ${(elapsedMs / 1000).toFixed(2)}s`
+      );
+    }
+    setFirstCellScored(true);
+  }, [cells, priorities, candidates, firstCellScored]);
+
+  // Derive simple PhaseStatus maps for PipelineProgress.
+  const extractPhase = useMemo<Record<string, PhaseStatus>>(() => {
+    const out: Record<string, PhaseStatus> = {};
+    for (const c of candidates) out[c.id] = extractByCandidate[c.id]?.status ?? "loading";
+    return out;
+  }, [extractByCandidate, candidates]);
+
+  const classifyPhase = useMemo<Record<string, PhaseStatus>>(() => {
+    const out: Record<string, PhaseStatus> = {};
+    for (const c of candidates) {
+      const ext = extractByCandidate[c.id]?.status;
+      const cls = classifyByCandidate[c.id]?.status;
+      // Classify hasn't logically started until extract is done. Surface
+      // "pending" until extract completes so the UI doesn't show four
+      // candidates "classifying" at t=0.
+      if (cls === "ready" || cls === "error") out[c.id] = cls;
+      else if (ext === "ready") out[c.id] = "loading";
+      else out[c.id] = "pending";
+    }
+    return out;
+  }, [classifyByCandidate, extractByCandidate, candidates]);
+
+  const scorePhase = useMemo<Record<string, PhaseStatus>>(() => {
+    const out: Record<string, PhaseStatus> = {};
+    for (const p of priorities) out[p.id] = scoreByIssue[p.id]?.status ?? "pending";
+    return out;
+  }, [scoreByIssue, priorities]);
+
   return (
     <>
+      {!firstCellScored && (
+        <div className="mb-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+          <PipelineProgress
+            candidates={candidates}
+            priorities={priorities}
+            extractPhase={extractPhase}
+            classifyPhase={classifyPhase}
+            scorePhase={scorePhase}
+          />
+          <ElectionFacts />
+        </div>
+      )}
       <MatrixGrid candidates={candidates} priorities={priorities} cells={cells} />
       <section aria-labelledby="missing-panels-heading" className="mt-8 space-y-4">
         <h2 id="missing-panels-heading" className="sr-only">

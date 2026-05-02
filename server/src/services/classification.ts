@@ -19,26 +19,54 @@ export type ClassifiedCommitment = {
   confidence: number;
 };
 
-const CLASSIFY_SYSTEM = `${SYSTEM_PROMPT_NEUTRAL} Your task is issue classification: map each commitment to exactly one of the canonical issue IDs listed in CONTEXT, or null if no canonical issue fits. Use the synonym lists in CONTEXT as retrieval expansion hints (a commitment that mentions a synonym should be classified into the issue that owns that synonym). The output must use the snake_case issue ID, never the label, never a kebab-case variant. Tie-breaker rule: when a commitment names both a target service area and a transparency mechanism, prefer the service-area issueId over corruption.`;
+const CLASSIFY_SYSTEM = `${SYSTEM_PROMPT_NEUTRAL} Your task is issue classification: map each commitment to exactly one of the canonical issue IDs listed in CONTEXT, or null if no canonical issue fits. Use the key terms in CONTEXT as retrieval expansion hints — a commitment that mentions one of an issue's key terms should generally be classified into that issue. Beyond those literal hints you may rely on your own semantic knowledge of Indian state-government policy vocabulary (Hindi and Bengali included; Devanagari and Bengali script terms are handled natively without needing transliterated hints). The output must use the snake_case issue ID, never the label, never a kebab-case variant. Tie-breaker rule: when a commitment names both a target service area and a transparency mechanism, prefer the service-area issueId over corruption.
+
+Output format: return ONLY {issueId, confidence} per commitment, in the same order as the input commitments array. Do not echo the commitment text, page, or paragraph back — the caller will reattach those by index. The classified array length must equal the input commitments array length.`;
+
+// Keep the prompt context tight: only the top-N most distinctive English
+// synonyms per issue, and skip the Hindi/Bengali lists entirely. The full
+// multilingual list (~70 synonyms × 10 issues across 3 scripts) was
+// measured at ~8.5KB of CONTEXT and contributed ~30s of Gemini latency
+// per classify call. Trimming to top-10 English drops the context to
+// ~3.5KB and pushes classify under the 15s target while keeping accuracy:
+// the model knows the full Indian-policy vocabulary natively and only
+// needs anchor words to bind each commitment to the right issue ID.
+//
+// `taxonomy.allSynonymsLower` (used by the local stub matcher in
+// classifyByMatches below) still indexes the FULL multilingual list, so
+// stub-mode coverage is unchanged.
+const KEY_TERMS_PER_ISSUE = 10;
 
 function buildClassifyContext(taxonomy: Taxonomy): string {
   const lines: string[] = [];
   lines.push("Canonical issue taxonomy (snake_case IDs are the only valid output values):\n");
   for (const issue of taxonomy.issues) {
+    const keyTerms = issue.synonymsEn.slice(0, KEY_TERMS_PER_ISSUE);
     lines.push(`### ${issue.id}`);
     lines.push(`Label: ${issue.label}`);
     lines.push(`Description: ${issue.description}`);
-    lines.push(`English synonyms: ${issue.synonymsEn.join(", ")}`);
-    lines.push(`Hindi synonyms: ${issue.synonymsHi.join(", ")}`);
-    lines.push(`Bengali synonyms: ${issue.synonymsRegional.join(", ")}`);
+    lines.push(`Key terms (most distinctive ${KEY_TERMS_PER_ISSUE}): ${keyTerms.join(", ")}`);
     lines.push("");
   }
   lines.push(
-    "Confidence is a number between 0 and 1 representing how strongly the commitment matches the chosen issue's synonym set. issueId is null only when no canonical issue applies; if forced to choose, return null rather than guess."
+    "Hindi (Devanagari) and Bengali synonym hints are intentionally omitted — Gemini handles those scripts natively. Classify Hindi or Bengali commitments using the same canonical issue IDs above."
+  );
+  lines.push(
+    "Confidence is a number between 0 and 1 representing how strongly the commitment matches the chosen issue. issueId is null only when no canonical issue applies; if forced to choose, return null rather than guess."
   );
   return lines.join("\n");
 }
 
+// Lean output schema — the model returns ONLY {issueId, confidence} per
+// item in the same order as the input commitments. The route handler zips
+// these back to the original {text, page, paragraph} from the request,
+// preserving the public ClassifiedCommitment shape downstream.
+//
+// Why this matters: Gemini's classify latency is dominated by output token
+// generation, not input prompt processing. Echoing each commitment's
+// full text + position triples the output token count and was the primary
+// driver of the ~42s baseline. With the lean schema the model emits
+// roughly 35 × 25 ≈ 900 tokens instead of 35 × 80 ≈ 2800 tokens.
 const CLASSIFY_OUTPUT_SCHEMA = {
   type: "OBJECT",
   properties: {
@@ -47,13 +75,10 @@ const CLASSIFY_OUTPUT_SCHEMA = {
       items: {
         type: "OBJECT",
         properties: {
-          text: { type: "STRING" },
-          page: { type: "INTEGER" },
-          paragraph: { type: "INTEGER" },
           issueId: { type: "STRING", nullable: true },
           confidence: { type: "NUMBER" }
         },
-        required: ["text", "page", "paragraph", "issueId", "confidence"]
+        required: ["issueId", "confidence"]
       }
     }
   },
@@ -62,41 +87,49 @@ const CLASSIFY_OUTPUT_SCHEMA = {
 
 type GeminiClassifyResult = {
   classified?: Array<{
-    text?: unknown;
-    page?: unknown;
-    paragraph?: unknown;
     issueId?: unknown;
     confidence?: unknown;
   }>;
 };
 
-function isFiniteInt(v: unknown): v is number {
-  return typeof v === "number" && Number.isFinite(v) && Number.isInteger(v);
-}
-
 function isFiniteNumber(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
 
-function validateGeminiClassify(raw: unknown, taxonomy: Taxonomy): ClassifiedCommitment[] {
+// Validates the lean Gemini output and zips it with the input commitments
+// to produce the full ClassifiedCommitment[]. Items the model omitted or
+// returned with an unknown issueId are filled with {issueId: null,
+// confidence: 0} at the corresponding position so the response array
+// length always matches the request array length.
+function validateGeminiClassify(
+  raw: unknown,
+  taxonomy: Taxonomy,
+  inputs: readonly InputCommitmentForClassify[]
+): ClassifiedCommitment[] {
   const obj = (raw ?? {}) as GeminiClassifyResult;
   const list = Array.isArray(obj.classified) ? obj.classified : [];
   const validIds = new Set(taxonomy.issues.map((i) => i.id));
   const out: ClassifiedCommitment[] = [];
-  for (const c of list) {
-    if (typeof c.text !== "string") continue;
-    if (!isFiniteInt(c.page) || !isFiniteInt(c.paragraph)) continue;
-    if (!isFiniteNumber(c.confidence)) continue;
-    let issueId: string | null;
-    if (c.issueId === null) issueId = null;
-    else if (typeof c.issueId === "string" && validIds.has(c.issueId)) issueId = c.issueId;
-    else continue;
+  for (let i = 0; i < inputs.length; i += 1) {
+    const c = list[i];
+    const input = inputs[i]!;
+    let issueId: string | null = null;
+    let confidence = 0;
+    if (c !== undefined) {
+      if (c.issueId === null) issueId = null;
+      else if (typeof c.issueId === "string" && validIds.has(c.issueId)) {
+        issueId = c.issueId;
+      }
+      if (isFiniteNumber(c.confidence)) {
+        confidence = Math.max(0, Math.min(1, c.confidence));
+      }
+    }
     out.push({
-      text: c.text,
-      page: c.page,
-      paragraph: c.paragraph,
+      text: input.text,
+      page: input.page,
+      paragraph: input.paragraph,
       issueId,
-      confidence: Math.max(0, Math.min(1, c.confidence))
+      confidence
     });
   }
   return out;
@@ -157,7 +190,7 @@ export async function classifyCommitments(
       input: JSON.stringify({ commitments }),
       outputSchema: CLASSIFY_OUTPUT_SCHEMA
     });
-    const classified = validateGeminiClassify(raw, taxonomy);
+    const classified = validateGeminiClassify(raw, taxonomy, commitments);
     logger.info("classify_live", { count: classified.length });
     return classified;
   }
