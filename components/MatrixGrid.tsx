@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Candidate } from "@/lib/types/candidates";
 import type { Issue } from "@/lib/types/issues";
+import type { CellState } from "@/lib/types/pipeline";
 import type { ScoredCommitment } from "@/lib/types/scoring";
 import { ScoreCard } from "./ScoreCard";
 import { RubricDimensionDetail } from "./RubricDimensionDetail";
@@ -10,15 +11,16 @@ import { RubricDimensionDetail } from "./RubricDimensionDetail";
 type Props = {
   candidates: readonly Candidate[];
   priorities: readonly Issue[];
-  // commitments[issueId][candidateId] -> ScoredCommitment | null (null = not addressed)
-  commitments: Readonly<Record<string, Readonly<Record<string, ScoredCommitment | null>>>>;
+  // cells[issueId][candidateId] -> CellState ({loading|empty|scored}).
+  // Cells with no entry default to {kind: "loading"}.
+  cells: Readonly<Record<string, Readonly<Record<string, CellState>>>>;
 };
 
 type DetailState =
   | { open: false }
   | { open: true; commitment: ScoredCommitment; candidateName: string; issueLabel: string };
 
-export function MatrixGrid({ candidates, priorities, commitments }: Props) {
+export function MatrixGrid({ candidates, priorities, cells }: Props) {
   const [detail, setDetail] = useState<DetailState>({ open: false });
 
   return (
@@ -32,7 +34,10 @@ export function MatrixGrid({ candidates, priorities, commitments }: Props) {
         }}
       >
         <div role="row" className="contents">
-          <div role="columnheader" className="border-b border-r border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <div
+            role="columnheader"
+            className="border-b border-r border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium uppercase tracking-wide text-slate-500"
+          >
             Issue priority
           </div>
           {candidates.map((c) => (
@@ -59,7 +64,8 @@ export function MatrixGrid({ candidates, priorities, commitments }: Props) {
               </span>
             </div>
             {candidates.map((c) => {
-              const cell = commitments[issue.id]?.[c.id] ?? null;
+              const cell: CellState =
+                cells[issue.id]?.[c.id] ?? { kind: "loading" };
               return (
                 <div
                   key={`${issue.id}-${c.id}`}
@@ -69,10 +75,10 @@ export function MatrixGrid({ candidates, priorities, commitments }: Props) {
                   }`}
                 >
                   <ScoreCard
-                    commitment={cell}
+                    cell={cell}
                     candidateName={c.name}
                     onOpenDetail={
-                      cell !== null
+                      cell.kind === "scored"
                         ? (cm) =>
                             setDetail({
                               open: true,

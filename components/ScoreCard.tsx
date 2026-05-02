@@ -1,15 +1,47 @@
+import type { CellState } from "@/lib/types/pipeline";
 import type { ScoredCommitment } from "@/lib/types/scoring";
 import { DIMENSION_META, DIMENSION_ORDER } from "@/lib/types/scoring";
 import { RubricBadge } from "./RubricBadge";
 
 type Props = {
-  commitment: ScoredCommitment | null;
+  cell: CellState;
   candidateName: string;
   onOpenDetail?: ((commitment: ScoredCommitment) => void) | undefined;
 };
 
-export function ScoreCard({ commitment, candidateName, onOpenDetail }: Props) {
-  if (commitment === null) {
+// Three visually distinct states: loading skeleton, "Not addressed"
+// dashed-border placeholder, and a populated card. The three states are
+// kept distinguishable on a glance — loading uses a soft pulse, empty uses
+// a dashed border + slate background, scored uses a solid border + white.
+export function ScoreCard({ cell, candidateName, onOpenDetail }: Props) {
+  if (cell.kind === "loading") {
+    return (
+      <article
+        aria-label={`${candidateName}: loading score`}
+        aria-busy="true"
+        className="flex h-full min-h-[140px] flex-col rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+      >
+        <div className="flex flex-grow flex-col gap-2">
+          <div className="h-2.5 w-full animate-pulse rounded bg-slate-200" />
+          <div className="h-2.5 w-11/12 animate-pulse rounded bg-slate-200" />
+          <div className="h-2.5 w-2/3 animate-pulse rounded bg-slate-200" />
+        </div>
+        <div className="mt-2 space-y-1">
+          {DIMENSION_ORDER.map((dim) => (
+            <div key={dim} className="flex items-center justify-between gap-2">
+              <div className="h-2 w-16 animate-pulse rounded bg-slate-100" />
+              <div className="h-2 w-12 animate-pulse rounded bg-slate-100" />
+            </div>
+          ))}
+        </div>
+        <p className="sr-only" role="status">
+          Loading score for {candidateName}…
+        </p>
+      </article>
+    );
+  }
+
+  if (cell.kind === "empty") {
     return (
       <article
         aria-label={`${candidateName}: not addressed`}
@@ -21,6 +53,7 @@ export function ScoreCard({ commitment, candidateName, onOpenDetail }: Props) {
     );
   }
 
+  const commitment = cell.commitment;
   const handleClick = onOpenDetail ? () => onOpenDetail(commitment) : undefined;
 
   return (
@@ -29,13 +62,19 @@ export function ScoreCard({ commitment, candidateName, onOpenDetail }: Props) {
       className="flex h-full min-h-[140px] flex-col rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
     >
       <p className="line-clamp-3 flex-grow text-xs leading-snug text-slate-800">
-        {commitment.text || "[Commitment text will appear here once /api/score returns data]"}
+        {commitment.text}
       </p>
       <ul aria-label="Rubric scores" className="mt-2 grid grid-cols-1 gap-1">
         {DIMENSION_ORDER.map((dim) => (
           <li key={dim} className="flex items-center justify-between gap-2">
-            <span className="text-[10px] uppercase tracking-wide text-slate-500">{DIMENSION_META[dim].label}</span>
-            <RubricBadge score={commitment.dimensions[dim].score} dimensionLabel={DIMENSION_META[dim].label} size="sm" />
+            <span className="text-[10px] uppercase tracking-wide text-slate-500">
+              {DIMENSION_META[dim].label}
+            </span>
+            <RubricBadge
+              score={commitment.dimensions[dim].score}
+              dimensionLabel={DIMENSION_META[dim].label}
+              size="sm"
+            />
           </li>
         ))}
       </ul>

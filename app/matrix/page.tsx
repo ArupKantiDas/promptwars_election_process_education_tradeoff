@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { MatrixGrid } from "@/components/MatrixGrid";
-import { MissingPanelLive } from "@/components/MissingPanelLive";
+import { LiveMatrix } from "@/components/LiveMatrix";
 import { CANDIDATES } from "@/lib/types/candidates";
 import { CANONICAL_ISSUES, ISSUE_BY_ID } from "@/lib/types/issues";
 import type { IssueId } from "@/lib/types/issues";
-import type { ScoredCommitment } from "@/lib/types/scoring";
-
-const TOP_PRIORITIES_FOR_MISSING = 3;
 
 const MATRIX_ROWS = 5;
 
@@ -34,23 +30,15 @@ export default function MatrixPage({ searchParams }: Props) {
   const priorityIds = parsePriorities(searchParams.priorities);
   const priorities = priorityIds.map((id) => ISSUE_BY_ID[id]);
 
-  // Empty data shape per Phase 3 spec ("Build the UI to receive that shape.
-  // Do not call any API yet."). Phase 7 will populate this from /api/score.
-  const commitments: Record<string, Record<string, ScoredCommitment | null>> = {};
-  for (const issue of priorities) {
-    commitments[issue.id] = {};
-    for (const c of CANDIDATES) {
-      commitments[issue.id]![c.id] = null;
-    }
-  }
-
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
       <header className="flex flex-wrap items-baseline justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Comparison matrix</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+            Comparison matrix
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-700">
-            Scored commitments side by side, clustered by your ranked priorities. Each cell will populate independently as <code className="rounded bg-slate-100 px-1 text-xs">/api/score</code> returns data; cells that remain &ldquo;Not addressed&rdquo; mean the candidate had no commitment classified into that issue.
+            Scored commitments side by side, clustered by your ranked priorities. Each cell populates independently as <code className="rounded bg-slate-100 px-1 text-xs">/api/score</code> returns data; cells that show &ldquo;Not addressed&rdquo; mean the candidate had no commitment classified into that issue.
           </p>
         </div>
         <Link
@@ -79,21 +67,9 @@ export default function MatrixPage({ searchParams }: Props) {
           </Link>
         </section>
       ) : (
-        <>
-          <div className="mt-6">
-            <MatrixGrid candidates={CANDIDATES} priorities={priorities} commitments={commitments} />
-          </div>
-          <section className="mt-8 space-y-4">
-            <h2 className="sr-only">What&apos;s missing per candidate</h2>
-            {CANDIDATES.map((c) => (
-              <MissingPanelLive
-                key={c.id}
-                candidate={c}
-                priorities={priorityIds.slice(0, TOP_PRIORITIES_FOR_MISSING)}
-              />
-            ))}
-          </section>
-        </>
+        <div className="mt-6">
+          <LiveMatrix candidates={CANDIDATES} priorities={priorities} />
+        </div>
       )}
     </main>
   );
