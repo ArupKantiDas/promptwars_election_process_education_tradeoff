@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { MatrixGrid } from "@/components/MatrixGrid";
-import { MissingPanel } from "@/components/MissingPanel";
+import { MissingPanelLive } from "@/components/MissingPanelLive";
 import { CANDIDATES } from "@/lib/types/candidates";
 import { CANONICAL_ISSUES, ISSUE_BY_ID } from "@/lib/types/issues";
 import type { IssueId } from "@/lib/types/issues";
 import type { ScoredCommitment } from "@/lib/types/scoring";
+
+const TOP_PRIORITIES_FOR_MISSING = 3;
 
 const MATRIX_ROWS = 5;
 
@@ -84,7 +86,11 @@ export default function MatrixPage({ searchParams }: Props) {
           <section className="mt-8 space-y-4">
             <h2 className="sr-only">What&apos;s missing per candidate</h2>
             {CANDIDATES.map((c) => (
-              <MissingPanel key={c.id} candidate={c} missing={[]} />
+              <MissingPanelLive
+                key={c.id}
+                candidate={c}
+                priorities={priorityIds.slice(0, TOP_PRIORITIES_FOR_MISSING)}
+              />
             ))}
           </section>
         </>

@@ -4,6 +4,7 @@ import { logger } from "./logger.js";
 import { boothRouter } from "./routes/booth.js";
 import { classifyRouter } from "./routes/classify.js";
 import { extractRouter } from "./routes/extract.js";
+import { missingRouter } from "./routes/missing.js";
 import { scoreRouter } from "./routes/score.js";
 import { warmRouter } from "./routes/warm.js";
 
@@ -20,6 +21,7 @@ app.get("/healthz", (_req, res) => {
 app.use("/api/extract", extractRouter);
 app.use("/api/classify", classifyRouter);
 app.use("/api/score", scoreRouter);
+app.use("/api/missing", missingRouter);
 app.use("/api/booth", boothRouter);
 app.use("/api/warm", warmRouter);
 

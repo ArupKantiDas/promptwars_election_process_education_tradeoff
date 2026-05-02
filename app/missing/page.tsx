@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MissingPanel } from "@/components/MissingPanel";
+import { MissingPanelLive } from "@/components/MissingPanelLive";
 import { CANDIDATES } from "@/lib/types/candidates";
 import { CANONICAL_ISSUES } from "@/lib/types/issues";
 import type { IssueId } from "@/lib/types/issues";
@@ -58,7 +58,7 @@ export default function MissingPage({ searchParams }: Props) {
       ) : (
         <section className="mt-6 space-y-4">
           {CANDIDATES.map((c) => (
-            <MissingPanel key={c.id} candidate={c} missing={[]} />
+            <MissingPanelLive key={c.id} candidate={c} priorities={top} />
           ))}
         </section>
       )}
