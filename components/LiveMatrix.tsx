@@ -10,6 +10,7 @@ import type {
 } from "@/lib/types/pipeline";
 import { DIMENSION_ORDER, type ScoredCommitment } from "@/lib/types/scoring";
 import { apiClassifyBatched, apiExtract, apiScore } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { computeMissingForCandidate } from "@/lib/missing";
 import {
   clearPipelineState,
@@ -412,10 +413,9 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     if (!firstScoredLoggedRef.current) {
       const elapsedMs = performance.now() - pipelineStartRef.current;
       firstScoredLoggedRef.current = true;
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[livematrix-perf] first scored cell at ${(elapsedMs / 1000).toFixed(2)}s`
-      );
+      logger.warn("livematrix_perf_first_scored_cell", {
+        elapsedSeconds: Number((elapsedMs / 1000).toFixed(2))
+      });
     }
     setFirstCellScored(true);
   }, [cells, priorities, candidates, firstCellScored]);
