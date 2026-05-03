@@ -1,0 +1,51 @@
+{
+  "_draftStatus": "[DRAFT — NOT NEUTRAL UNTIL HUMAN-REVISED] AI-drafted starter content. Verify factual plausibility, anti-stereotype calibration, and structural parity with the other three affidavits before treating as production content. The symmetry CI test must not run on this file until reviewed.",
+  "candidateId": "anuradha-sen-sharma",
+  "name": "Anuradha Sen Sharma",
+  "constituency": "bhabanipur",
+  "state": "West Bengal",
+  "archetype": "welfare-expansion",
+  "party": "Naagrik Adhikar Manch",
+  "affidavit": {
+    "dateOfBirth": "1975-04-12",
+    "age": 51,
+    "gender": "F",
+    "education": {
+      "level": "PhD",
+      "field": "Public Policy",
+      "institution": "University of Calcutta",
+      "yearCompleted": 2008
+    },
+    "profession": {
+      "category": "teacher / academic",
+      "details": "Professor of Public Policy at Presidency University, Kolkata; published 32 peer-reviewed papers on labour-market informality and state welfare delivery."
+    },
+    "priorElections": [
+      {
+        "year": 2016,
+        "constituency": "Behala Paschim",
+        "outcome": "lost",
+        "voteShare": 18.4
+      }
+    ],
+    "declaredAssets": {
+      "totalRupees": 42000000,
+      "movableRupees": 8500000,
+      "immovableRupees": 33500000,
+      "summary": "₹4.2 crore total: ₹85 lakh movable (bank deposits, mutual funds, vehicle), ₹3.35 crore immovable (inherited family residence in Ballygunge plus a small ancestral plot in Hooghly).",
+      "quartile": "Q4"
+    },
+    "declaredCases": [
+      {
+        "status": "closed_criminal_over_a_decade_ago",
+        "year": 2010,
+        "yearClosed": 2014,
+        "type": "criminal",
+        "section": "Section 188 IPC (disobedience to order duly promulgated by public servant)",
+        "description": "Arrested during a teachers' rights protest at the University of Calcutta in November 2010. Case closed in 2014 with no conviction; the magistrate ruled the protest was within Article 19(1)(b) Constitutional limits."
+      }
+    ],
+    "priorPublicServiceYears": 18,
+    "priorPublicServiceDetails": "Member, West Bengal State Planning Board sub-committee on labour (2014–2019); founding board member, Eastern India Labour Studies Network (since 2008); pro bono policy advisor to the Tea Garden Workers' Union (2010–present)."
+  }
+}

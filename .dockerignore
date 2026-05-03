@@ -9,7 +9,7 @@
 *.log
 
 # Editor and tooling
-.agents
+.claude
 .vscode
 .idea
 
@@ -55,3 +55,4 @@ firestore.rules
 
 # CI
 .github
+.agents

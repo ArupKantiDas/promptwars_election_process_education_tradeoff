@@ -1,0 +1,239 @@
+{
+  "state": "West Bengal",
+  "election_year": 2026,
+  "issues": [
+    {
+      "id": "employment",
+      "label": "Employment and Livelihoods",
+      "description": "Job creation, public recruitment, delayed government examinations, outward migration of educated youth, industrial revival",
+      "synonyms_en": [
+        "jobs", "unemployment", "employment", "recruitment", "livelihoods",
+        "job creation", "industry", "workers", "labour", "migration",
+        "SSC", "recruitment scam", "public sector jobs", "industrial development",
+        "youth employment", "skilled jobs", "job guarantee",
+        "MSME", "micro small medium enterprise", "industrial hub",
+        "investor services", "small business", "entrepreneur",
+        "mentorship network", "first-time entrepreneur", "business incubation"
+      ],
+      "synonyms_hi": [
+        "रोजगार", "नौकरी", "बेरोजगारी", "भर्ती", "उद्योग",
+        "श्रमिक", "मजदूर", "आजीविका", "युवा रोजगार"
+      ],
+      "synonyms_regional": [
+        "কর্মসংস্থান", "চাকরি", "বেকারত্ব", "নিয়োগ", "শ্রমিক",
+        "যুব কর্মসংস্থান", "শিল্প", "জীবিকা", "এসএসসি কেলেঙ্কারি"
+      ]
+    },
+    {
+      "id": "healthcare",
+      "label": "Healthcare Access and Quality",
+      "description": "Gaps in specialist care forcing patients to travel to southern India, affordability, rural health infrastructure, public hospital capacity",
+      "synonyms_en": [
+        "healthcare", "health", "hospital", "medical", "doctor",
+        "treatment", "medicine", "public health", "primary care",
+        "specialist", "ambulance", "health insurance", "free treatment",
+        "AIIMS", "medical college", "health infrastructure",
+        "ASHA", "ASHA worker", "community health worker", "frontline health worker"
+      ],
+      "synonyms_hi": [
+        "स्वास्थ्य", "अस्पताल", "चिकित्सा", "दवाई", "डॉक्टर",
+        "इलाज", "स्वास्थ्य सेवा", "सार्वजनिक स्वास्थ्य"
+      ],
+      "synonyms_regional": [
+        "স্বাস্থ্য", "হাসপাতাল", "চিকিৎসা", "ডাক্তার", "ওষুধ",
+        "স্বাস্থ্যসেবা", "সরকারি হাসপাতাল", "বিনামূল্যে চিকিৎসা",
+        "স্বাস্থ্য পরিকাঠামো"
+      ]
+    },
+    {
+      "id": "womens_safety",
+      "label": "Women's Safety and Law and Order",
+      "description": "Post-RG Kar incident public trust deficit, crimes against women, law and order, police accountability, campus safety",
+      "synonyms_en": [
+        "women's safety", "safety", "law and order", "crime", "violence against women",
+        "rape", "harassment", "assault", "police", "security",
+        "RG Kar", "justice", "protection", "POCSO", "street safety",
+        "law enforcement", "women's rights"
+      ],
+      "synonyms_hi": [
+        "महिला सुरक्षा", "कानून व्यवस्था", "अपराध", "सुरक्षा",
+        "पुलिस", "न्याय", "महिला अधिकार", "हिंसा"
+      ],
+      "synonyms_regional": [
+        "নারী সুরক্ষা", "আইনশৃঙ্খলা", "অপরাধ", "নিরাপত্তা",
+        "পুলিশ", "ন্যায়বিচার", "মহিলাদের অধিকার", "যৌন হিংসা",
+        "আরজি কর", "ক্যাম্পাস সুরক্ষা"
+      ]
+    },
+    {
+      "id": "corruption",
+      "label": "Corruption and Governance",
+      "description": "School recruitment scam, institutional credibility, central agency investigations, administrative transparency, anti-incumbency after 15 years of AITC rule",
+      "synonyms_en": [
+        "corruption", "scam", "governance", "transparency", "accountability",
+        "recruitment irregularities", "bribery", "kickbacks", "institutional credibility",
+        "CBI", "ED", "central agencies", "anti-corruption", "administrative reform",
+        "school jobs scam", "SSC scam", "misuse of power",
+        "RTI", "right to information", "disclosure", "dashboard",
+        "ward expenditure", "procurement", "tender", "state portal",
+        "public accounts", "expenditure tracker",
+        "third-party audit", "CAG", "comptroller auditor general",
+        "audit firms", "state contracts", "Lokayukta", "complaints disposal",
+        "anti-corruption ombudsman", "KMC budget", "capital works expenditure",
+        "citizen portal", "budget data", "citizen audit council",
+        "audit council", "quarterly public works review"
+      ],
+      "synonyms_hi": [
+        "भ्रष्टाचार", "घोटाला", "शासन", "पारदर्शिता", "जवाबदेही",
+        "सुशासन", "प्रशासन", "रिश्वत"
+      ],
+      "synonyms_regional": [
+        "দুর্নীতি", "কেলেঙ্কারি", "শাসন", "স্বচ্ছতা", "জবাবদিহিতা",
+        "প্রশাসনিক সংস্কার", "সুশাসন", "ঘুষ", "নিয়োগ দুর্নীতি",
+        "শিক্ষক নিয়োগ কেলেঙ্কারি"
+      ]
+    },
+    {
+      "id": "education",
+      "label": "Education and Skill Development",
+      "description": "School and college quality, SSC recruitment reform, higher education access, vocational training, brain drain of educated youth",
+      "synonyms_en": [
+        "education", "schools", "colleges", "university", "teachers",
+        "skill development", "vocational training", "curriculum", "literacy",
+        "scholarships", "midday meal", "dropout", "higher education",
+        "technical education", "coaching", "merit",
+        "school bus", "school transport", "school commute", "cooperative transport",
+        "citizen feedback", "school services delivery",
+        "service delivery feedback", "school service quality"
+      ],
+      "synonyms_hi": [
+        "शिक्षा", "स्कूल", "कॉलेज", "विश्वविद्यालय", "शिक्षक",
+        "कौशल विकास", "छात्रवृत्ति", "साक्षरता"
+      ],
+      "synonyms_regional": [
+        "শিক্ষা", "স্কুল", "কলেজ", "বিশ্ববিদ্যালয়", "শিক্ষক",
+        "দক্ষতা উন্নয়ন", "বৃত্তি", "মিড-ডে মিল", "সাক্ষরতা",
+        "কারিগরি শিক্ষা", "উচ্চশিক্ষা"
+      ]
+    },
+    {
+      "id": "agriculture",
+      "label": "Agriculture and Rural Economy",
+      "description": "Farmer income, crop price support, irrigation, rural credit, flood damage, fertiliser availability, cooperative reform",
+      "synonyms_en": [
+        "agriculture", "farmers", "farming", "crops", "MSP",
+        "minimum support price", "irrigation", "fertiliser", "rural",
+        "kisan", "flood", "drought", "crop insurance", "rural credit",
+        "cooperative", "paddy", "jute", "cold storage",
+        "farmer producer organisation", "FPO", "agricultural marketing",
+        "producer cooperative", "mandi",
+        "agri-tech", "agri tech", "demonstration centre",
+        "agricultural demonstration", "food-grain", "food grain",
+        "missed-enrolment households", "distribution coverage"
+      ],
+      "synonyms_hi": [
+        "कृषि", "किसान", "खेती", "फसल", "सिंचाई",
+        "उर्वरक", "ग्रामीण", "न्यूनतम समर्थन मूल्य", "बाढ़"
+      ],
+      "synonyms_regional": [
+        "কৃষি", "কৃষক", "চাষ", "ফসল", "সেচ",
+        "সার", "গ্রামীণ", "ন্যূনতম সহায়ক মূল্য", "বন্যা",
+        "পাট", "ধান", "কোল্ড স্টোরেজ", "কিষান"
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "label": "Infrastructure and Urban Development",
+      "description": "Roads, bridges, public transport, drinking water, electricity, flood management, Siliguri corridor, connectivity to North Bengal",
+      "synonyms_en": [
+        "infrastructure", "roads", "bridges", "transport", "electricity",
+        "drinking water", "connectivity", "urban development", "public transport",
+        "metro", "flood management", "drainage", "housing", "smart city",
+        "North Bengal", "Siliguri",
+        "street lighting", "street-lighting", "lighting coverage", "road lighting"
+      ],
+      "synonyms_hi": [
+        "बुनियादी ढांचा", "सड़क", "पुल", "परिवहन", "बिजली",
+        "पेयजल", "शहरी विकास", "आवास", "बाढ़ प्रबंधन"
+      ],
+      "synonyms_regional": [
+        "পরিকাঠামো", "রাস্তা", "সেতু", "পরিবহন", "বিদ্যুৎ",
+        "পানীয় জল", "নগর উন্নয়ন", "গৃহায়ন", "বন্যা ব্যবস্থাপনা",
+        "মেট্রো", "সংযোগ", "উত্তরবঙ্গ"
+      ]
+    },
+    {
+      "id": "welfare",
+      "label": "Welfare Schemes and Social Protection",
+      "description": "Direct benefit transfers, Lakshmir Bhandar, Kanyashree, ration, MGNREGA, housing for poor, pension, continuation of state welfare programmes",
+      "synonyms_en": [
+        "welfare", "social protection", "direct benefit transfer", "DBT",
+        "ration", "pension", "housing scheme", "MGNREGA", "employment guarantee",
+        "Lakshmir Bhandar", "Kanyashree", "Swasthya Sathi", "beneficiary",
+        "BPL", "subsidy", "free electricity", "social security",
+        "helpline", "citizen services", "documentation support", "grievance",
+        "multilingual services",
+        "food-grain distribution", "missed enrolment", "distribution coverage"
+      ],
+      "synonyms_hi": [
+        "कल्याण", "सामाजिक सुरक्षा", "राशन", "पेंशन", "आवास",
+        "सब्सिडी", "लाभार्थी", "मनरेगा", "प्रत्यक्ष लाभ हस्तांतरण"
+      ],
+      "synonyms_regional": [
+        "কল্যাণ", "সামাজিক সুরক্ষা", "রেশন", "পেনশন", "আবাসন",
+        "ভর্তুকি", "সুবিধাভোগী", "লক্ষ্মীর ভাণ্ডার", "কন্যাশ্রী",
+        "স্বাস্থ্যসাথী", "মনরেগা", "১০০ দিনের কাজ"
+      ]
+    },
+    {
+      "id": "citizenship_identity",
+      "label": "Citizenship, Identity and Electoral Integrity",
+      "description": "CAA implementation, SIR electoral roll deletions, undocumented migration, Matua community, Bengali identity, minority representation",
+      "synonyms_en": [
+        "citizenship", "CAA", "NRC", "voter list", "SIR",
+        "electoral rolls", "migration", "infiltration", "identity",
+        "Bengali identity", "Matua", "minority", "refugee", "stateless",
+        "voter deletion", "disenfranchisement", "border",
+        "Group C", "Group D", "state-board educated", "public service commission",
+        "domicile preference", "Bengali script", "Bengali-script",
+        "public records access", "district magistrate office",
+        "cultural industries", "traditional crafts", "small-scale publishing",
+        "cultural promotion", "voter-roll change log",
+        "state election commission", "electoral roll changes"
+      ],
+      "synonyms_hi": [
+        "नागरिकता", "मतदाता सूची", "पहचान", "अल्पसंख्यक",
+        "प्रवासी", "शरणार्थी", "बांग्लादेशी", "घुसपैठ"
+      ],
+      "synonyms_regional": [
+        "নাগরিকত্ব", "ভোটার তালিকা", "পরিচয়", "সংখ্যালঘু",
+        "অভিবাসী", "শরণার্থী", "মতুয়া", "বাংলাদেশী",
+        "অনুপ্রবেশ", "এসআইআর", "বাংলার অস্মিতা", "সীমান্ত"
+      ]
+    },
+    {
+      "id": "environment",
+      "label": "Environment and Climate Resilience",
+      "description": "Cyclone preparedness, Sundarbans degradation, flood-prone districts, industrial pollution, mangrove protection, clean air in Kolkata",
+      "synonyms_en": [
+        "environment", "climate", "cyclone", "flood", "Sundarbans",
+        "pollution", "mangrove", "clean air", "river", "deforestation",
+        "disaster management", "green energy", "solar", "coal",
+        "industrial pollution", "climate resilience", "Amphan",
+        "tree-planting", "tree planting", "road corridor greening",
+        "native-species", "afforestation", "tree survival", "ward parks",
+        "Adi Ganga", "waterway restoration", "inland waterways",
+        "river restoration"
+      ],
+      "synonyms_hi": [
+        "पर्यावरण", "जलवायु", "बाढ़", "चक्रवात", "प्रदूषण",
+        "वन", "नदी", "आपदा प्रबंधन", "हरित ऊर्जा"
+      ],
+      "synonyms_regional": [
+        "পরিবেশ", "জলবায়ু", "বন্যা", "ঘূর্ণিঝড়", "সুন্দরবন",
+        "দূষণ", "ম্যানগ্রোভ", "নদী", "বিপর্যয় ব্যবস্থাপনা",
+        "সৌরশক্তি", "শিল্প দূষণ", "আম্পান"
+      ]
+    }
+  ]
+}

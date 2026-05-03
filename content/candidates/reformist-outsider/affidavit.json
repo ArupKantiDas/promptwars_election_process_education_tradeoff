@@ -1,0 +1,50 @@
+{
+  "_draftStatus": "[DRAFT — NOT NEUTRAL UNTIL HUMAN-REVISED] AI-drafted starter content. Verify factual plausibility, anti-stereotype calibration, and structural parity with the other three affidavits before treating as production content. The symmetry CI test must not run on this file until reviewed.",
+  "candidateId": "ananya-bose",
+  "name": "Ananya Bose",
+  "constituency": "bhabanipur",
+  "state": "West Bengal",
+  "archetype": "reformist-outsider",
+  "party": "Aankalan Manch",
+  "affidavit": {
+    "dateOfBirth": "1985-07-30",
+    "age": 41,
+    "gender": "F",
+    "education": {
+      "level": "professional",
+      "field": "Master of Business Administration (Finance & Strategy)",
+      "institution": "Indian Institute of Management Calcutta",
+      "yearCompleted": 2009,
+      "priorDegrees": [
+        {
+          "degree": "B.Com (Hons)",
+          "institution": "St. Xavier's College, Kolkata",
+          "yearCompleted": 2006
+        }
+      ]
+    },
+    "profession": {
+      "category": "businessperson",
+      "details": "Founder and CEO of a Kolkata-based audit-tech / RegTech firm employing roughly 80 people; the company builds compliance-monitoring software used by a handful of state cooperative banks and MSME lenders. Previously a financial-controls consultant with a Big Four firm."
+    },
+    "priorElections": [],
+    "declaredAssets": {
+      "totalRupees": 8500000,
+      "movableRupees": 3500000,
+      "immovableRupees": 5000000,
+      "summary": "₹85 lakh total: ₹35 lakh movable (bank deposits, ESOPs at notional value, modest mutual-fund portfolio, a small two-wheeler), ₹50 lakh immovable (a 1-BHK flat in Tollygunge purchased 2018 with a still-active home loan of ₹22 lakh).",
+      "quartile": "Q1"
+    },
+    "declaredCases": [
+      {
+        "status": "dismissed",
+        "year": 2019,
+        "yearClosed": 2022,
+        "type": "civil — defamation",
+        "description": "Defamation suit filed in 2019 by a software vendor over a public LinkedIn post criticising opaque procurement practices in a state-cooperative bank tender. Suit dismissed by the Calcutta High Court in 2022 on grounds that the post constituted fair comment on a matter of public interest."
+      }
+    ],
+    "priorPublicServiceYears": 5,
+    "priorPublicServiceDetails": "Volunteer ombudsperson, Kolkata Municipal Corporation citizen-grievance pilot (2021–present). Co-founder, Bengal RTI Network — a volunteer collective filing and tracking RTI requests on state-government procurement (since 2020). Mentor, Ek Bharat Skills Foundation's MSME compliance bootcamp (2022–present)."
+  }
+}

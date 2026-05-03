@@ -1,0 +1,48 @@
+{
+  "_draftStatus": "[DRAFT — NOT NEUTRAL UNTIL HUMAN-REVISED] AI-drafted starter content. Verify factual plausibility, anti-stereotype calibration, and structural parity with the other three affidavits before treating as production content. The symmetry CI test must not run on this file until reviewed.",
+  "candidateId": "debarghya-pal",
+  "name": "Debarghya Pal",
+  "constituency": "bhabanipur",
+  "state": "West Bengal",
+  "archetype": "regional-identity",
+  "party": "Bangabhumi Vikas Manch",
+  "affidavit": {
+    "dateOfBirth": "1968-02-08",
+    "age": 58,
+    "gender": "M",
+    "education": {
+      "level": "tenth-pass",
+      "field": "Madhyamik (Class X)",
+      "institution": "West Bengal Board of Secondary Education",
+      "yearCompleted": 1985
+    },
+    "profession": {
+      "category": "social worker / activist",
+      "details": "Founder, Bangabhumi Shiksha Samiti — a network of 14 Bengali-medium primary schools across rural Hooghly serving roughly 3,800 children. Long-standing organiser of cultural-heritage festivals and small-trader cooperatives in the Burdwan-Hooghly belt."
+    },
+    "priorElections": [
+      {
+        "year": 2011,
+        "constituency": "Pursurah",
+        "outcome": "lost",
+        "voteShare": 22.1
+      },
+      {
+        "year": 2016,
+        "constituency": "Pursurah",
+        "outcome": "won",
+        "voteShare": 38.6
+      }
+    ],
+    "declaredAssets": {
+      "totalRupees": 34000000,
+      "movableRupees": 6500000,
+      "immovableRupees": 27500000,
+      "summary": "₹3.4 crore total: ₹65 lakh movable (bank deposits, jewellery, agricultural-equipment cooperative shares), ₹2.75 crore immovable (ancestral residence in rural Hooghly plus 4.2 bigha of inherited paddy land jointly held with siblings).",
+      "quartile": "Q3"
+    },
+    "declaredCases": [],
+    "priorPublicServiceYears": 25,
+    "priorPublicServiceDetails": "MLA, Pursurah (2016–2021). Panchayat samiti member, Pursurah block (2003–2008, 2008–2013). Founder-trustee, Bangabhumi Shiksha Samiti (since 2001). Lifetime member, Bangiya Sahitya Parishad's Hooghly chapter."
+  }
+}

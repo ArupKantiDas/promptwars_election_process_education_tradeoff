@@ -1,0 +1,61 @@
+{
+  "_draftStatus": "[DRAFT — NOT NEUTRAL UNTIL HUMAN-REVISED] AI-drafted starter content. Verify factual plausibility, anti-stereotype calibration, and structural parity with the other three affidavits before treating as production content. The symmetry CI test must not run on this file until reviewed.",
+  "candidateId": "rohit-mukherjee",
+  "name": "Rohit Mukherjee",
+  "constituency": "bhabanipur",
+  "state": "West Bengal",
+  "archetype": "market-reform",
+  "party": "Pragati Sankalp Party",
+  "affidavit": {
+    "dateOfBirth": "1980-09-24",
+    "age": 46,
+    "gender": "M",
+    "education": {
+      "level": "bachelor's",
+      "field": "Law (B.A. LL.B.)",
+      "institution": "Government Law College, University of Calcutta",
+      "yearCompleted": 2003
+    },
+    "profession": {
+      "category": "lawyer",
+      "details": "Senior advocate, Calcutta High Court, with a commercial-law and arbitration practice. Bar Council of West Bengal member since 2004; previously partner at a Kolkata-based firm advising mid-sized manufacturers and infrastructure SPVs."
+    },
+    "priorElections": [
+      {
+        "year": 2011,
+        "constituency": "Howrah Central",
+        "outcome": "won",
+        "voteShare": 41.2
+      },
+      {
+        "year": 2016,
+        "constituency": "Howrah Central",
+        "outcome": "lost",
+        "voteShare": 33.7
+      },
+      {
+        "year": 2021,
+        "constituency": "Howrah Central",
+        "outcome": "lost",
+        "voteShare": 26.9
+      }
+    ],
+    "declaredAssets": {
+      "totalRupees": 21000000,
+      "movableRupees": 7000000,
+      "immovableRupees": 14000000,
+      "summary": "₹2.1 crore total: ₹70 lakh movable (bank deposits, fixed deposits, modest equity portfolio, one car), ₹1.4 crore immovable (a 3-BHK flat in Salt Lake purchased 2012, a small office unit in Esplanade).",
+      "quartile": "Q2"
+    },
+    "declaredCases": [
+      {
+        "status": "pending_civil",
+        "year": 2022,
+        "type": "civil — defamation",
+        "description": "Defamation suit filed in 2022 by a former client over public statements made during a televised panel discussion regarding a banking-fraud allegation. Matter pending before the Calcutta City Civil Court."
+      }
+    ],
+    "priorPublicServiceYears": 9,
+    "priorPublicServiceDetails": "MLA, Howrah Central (2011–2016) — chaired the State Assembly's sub-committee on industrial dispute resolution. Vice-president, Bar Association of the Calcutta High Court (2018–2020). Pro bono counsel for the Federation of MSMEs of West Bengal (2014–2019)."
+  }
+}
