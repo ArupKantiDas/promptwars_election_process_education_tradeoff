@@ -92,7 +92,12 @@ async function uploadManifestos(bucketName: string): Promise<string[]> {
   for (const c of CANDIDATES) {
     const manifestoLocal = path.join(repoRoot(), c.manifestoPath);
     const buf = await readFile(manifestoLocal);
-    const objectKey = `manifestos/${c.candidateId}.md`;
+    // .txt extension (despite the local source being .md): Vertex AI
+    // Search's "content" data-schema importer recognizes a fixed set of
+    // file extensions (txt, html, pdf, docx, …) and silently skips
+    // anything else, even if the GCS contentType is correct. The body
+    // is still raw markdown — Gemini handles it the same either way.
+    const objectKey = `manifestos/${c.candidateId}.txt`;
     await bucket.file(objectKey).save(buf, {
       contentType: "text/plain; charset=utf-8",
       metadata: {
@@ -162,7 +167,7 @@ export async function seed(): Promise<void> {
   const searchLocation = process.env["VERTEX_SEARCH_LOCATION"] ?? "global";
 
   logger.info("seed_started", { projectId, dataStoreId, bucketName });
-  const uris = await uploadManifestos(require("SEED_GCS_BUCKET"));
+  const uris = await uploadManifestos(bucketName);
   await importToDataStore(projectId, searchLocation, dataStoreId, uris);
   logger.info("seed_done");
 }

@@ -1,0 +1,57 @@
+# Build context is the repo root (see server/Dockerfile for why).
+# Keep the context small by excluding everything the server image
+# does not need.
+
+# VCS / OS noise
+.git
+.gitignore
+.DS_Store
+*.log
+
+# Editor and tooling
+.claude
+.vscode
+.idea
+
+# Local env (server reads from process.env at runtime, never from file)
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Node and build artifacts (anywhere)
+**/node_modules
+**/dist
+**/.next
+.next
+
+# Frontend tree — not part of the server image
+app
+components
+lib
+public
+hooks
+scripts
+next.config.mjs
+postcss.config.mjs
+tailwind.config.ts
+next-env.d.ts
+.eslintrc.json
+firebase.json
+firestore.indexes.json
+firestore.rules
+.firebaserc
+
+# Repo-level docs (root-anchored so we keep content/**/*.md)
+/AGENTS.md
+/README.md
+/BUILD_BLUEPRINT.md
+/CANDIDATE_CONTENT_BRIEF.md
+/PROMPT_LOG.md
+/CONTRIBUTING.md
+/MANIFESTO_REVIEW.md
+
+# CI
+.github
