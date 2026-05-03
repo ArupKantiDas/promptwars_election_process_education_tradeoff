@@ -10,6 +10,7 @@ import type {
 } from "@/lib/types/pipeline";
 import { DIMENSION_ORDER, type ScoredCommitment } from "@/lib/types/scoring";
 import { apiClassifyBatched, apiExtract, apiScore } from "@/lib/api";
+import { recordPipelineCompletion } from "@/lib/firebase/sessions";
 import { logger } from "@/lib/logger";
 import { computeMissingForCandidate } from "@/lib/missing";
 import {
@@ -380,6 +381,10 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     markPipelineComplete(priorities.map((p) => p.id));
     if (!livePipelineHadErrors) {
       writeMatrixCache(priorities.map((p) => p.id), livePipelineCells);
+      // Fire-and-forget Firestore session-completion telemetry. No-op
+      // when Firebase isn't configured. Skipped on errored runs so the
+      // session record reflects only successful comparisons.
+      recordPipelineCompletion();
     }
     setProgressPhase((prev) => (prev === "running" ? "done" : prev));
     const fadeStart = window.setTimeout(() => {

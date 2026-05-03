@@ -41,6 +41,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Anonymous-auth session telemetry. One document per user, written
+    // by the LandingForm (priorities, locale) and the LiveMatrix
+    // (pipelineCompleted, completedAt). Only the owner may read or write.
+    match /sessions/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
     // Default deny.
     match /{document=**} {
       allow read, write: if false;

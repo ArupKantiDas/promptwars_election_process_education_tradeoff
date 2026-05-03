@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IssueId } from "@/lib/types/issues";
 import { CANONICAL_ISSUES } from "@/lib/types/issues";
 import { DEFAULT_CONSTITUENCY_ID, DEFAULT_STATE_CODE } from "@/lib/data/states";
+import { ensureAnonymousUser } from "@/lib/firebase/client";
+import { recordPrioritySelection } from "@/lib/firebase/sessions";
+import { logger } from "@/lib/logger";
 import {
   readPrioritiesSelectionCache,
   writePrioritiesSelectionCache
@@ -55,6 +58,10 @@ export function LandingForm() {
   const [stateCode, setStateCode] = useState(DEFAULT_STATE_CODE);
   const [constituencyId, setConstituencyId] = useState(DEFAULT_CONSTITUENCY_ID);
   const [priorities, setPriorities] = useState<readonly IssueId[]>([]);
+  // Anonymous-auth uid, populated on mount. Captured in a ref so the
+  // submit handler can use it synchronously without re-resolving the
+  // anonymous-sign-in promise on every click.
+  const uidRef = useRef<string | null>(null);
 
   // Restore the user's previous selection on back-navigation from
   // /matrix. Done in an effect (not lazy useState init) to avoid
@@ -77,9 +84,33 @@ export function LandingForm() {
     writePrioritiesSelectionCache(priorities);
   }, [priorities]);
 
+  // Anonymous Firebase Auth on mount. Soft-fails if Firebase isn't
+  // configured (missing NEXT_PUBLIC_FIREBASE_* env vars) or anonymous
+  // auth isn't enabled in the console — sessionStorage caching keeps
+  // working independently of any of this.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const uid = await ensureAnonymousUser();
+        if (!cancelled) uidRef.current = uid;
+      } catch (err) {
+        logger.warn("firebase_anon_signin_failed", {
+          reason: err instanceof Error ? err.message : "unknown_error"
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (priorities.length < MIN_PRIORITIES_TO_SUBMIT) return;
+    // Fire-and-forget Firestore write. Never awaited; never blocks the
+    // navigation. If Firebase isn't configured the helper is a no-op.
+    recordPrioritySelection(uidRef.current, priorities, stateCode, constituencyId);
     const params = new URLSearchParams({
       state: stateCode,
       constituency: constituencyId,
