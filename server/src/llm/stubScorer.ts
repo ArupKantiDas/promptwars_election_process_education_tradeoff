@@ -49,13 +49,6 @@ function fallbackSpan(text: string): string {
   return text.slice(0, 60).trim();
 }
 
-function score(span: string | null, fallbackText: string, scoreIfMatch: 1 | 2 | 3 | 4 | 5): DimensionResult {
-  if (span === null) {
-    return { score: 1, triggeringSpan: fallbackSpan(fallbackText), unverified: false };
-  }
-  return { score: scoreIfMatch, triggeringSpan: span, unverified: false };
-}
-
 // Per-dimension heuristics. Each runs strongest pattern → weakest, returns
 // the first match's score and span.
 

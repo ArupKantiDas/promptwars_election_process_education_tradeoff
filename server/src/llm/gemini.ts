@@ -4,6 +4,7 @@
 // Migration guide: https://cloud.google.com/vertex-ai/generative-ai/docs/deprecations/genai-vertexai-sdk
 
 import type { GoogleGenAI as GoogleGenAIType, Schema } from "@google/genai";
+import { loadConfig } from "../config.js";
 import { logger } from "../logger.js";
 
 // Per AGENTS.md: "Gemini 2.5 Flash for all model calls." All Gemini access
@@ -123,12 +124,17 @@ let cached: GeminiClient | null = null;
 
 export function getGeminiClient(): GeminiClient {
   if (cached !== null) return cached;
-  const projectId = process.env["GCP_PROJECT_ID"] ?? "";
-  const location = process.env["GCP_LOCATION"] ?? "us-central1";
-  const model = process.env["GEMINI_MODEL"] ?? "gemini-2.5-flash";
-  if (projectId.length > 0) {
-    cached = new LiveGeminiClient(projectId, location, model);
-    logger.info("gemini_client_initialised", { mode: "live", model, location });
+  // Single source of truth for env reads is server/src/config.ts. Anything
+  // that needs GCP_PROJECT_ID / GCP_LOCATION / GEMINI_MODEL goes through
+  // loadConfig so the env contract is typed and validated in one place.
+  const { gcp, gemini } = loadConfig();
+  if (gcp.projectId !== undefined) {
+    cached = new LiveGeminiClient(gcp.projectId, gcp.location, gemini.model);
+    logger.info("gemini_client_initialised", {
+      mode: "live",
+      model: gemini.model,
+      location: gcp.location
+    });
   } else {
     cached = new StubGeminiClient();
     logger.warn("gemini_client_initialised", { mode: "stub", reason: "GCP_PROJECT_ID not set" });

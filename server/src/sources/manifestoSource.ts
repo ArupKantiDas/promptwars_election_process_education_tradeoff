@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { loadConfig } from "../config.js";
 import { logger } from "../logger.js";
 import { parseManifestoMarkdown, type ParsedManifesto } from "./markdown.js";
 
@@ -49,14 +50,12 @@ let cached: ManifestoSource | null = null;
 
 export function getManifestoSource(): ManifestoSource {
   if (cached !== null) return cached;
-  // Prefer Vertex AI Search when both project and search engine are configured;
+  // Single source of truth for env reads is server/src/config.ts. Prefer
+  // Vertex AI Search when both project and search engine are configured;
   // otherwise fall back to local file reads. Local fallback is what makes
   // /api/extract and /api/classify testable without GCP credentials.
-  const useVertex =
-    typeof process.env["GCP_PROJECT_ID"] === "string" &&
-    process.env["GCP_PROJECT_ID"].length > 0 &&
-    typeof process.env["VERTEX_SEARCH_ENGINE_ID"] === "string" &&
-    process.env["VERTEX_SEARCH_ENGINE_ID"].length > 0;
+  const { gcp, vertex } = loadConfig();
+  const useVertex = gcp.projectId !== undefined && vertex.searchEngineId !== undefined;
   cached = useVertex ? new VertexSearchManifestoSource() : new LocalManifestoSource();
   logger.info("manifesto_source_initialised", { mode: useVertex ? "vertex" : "local" });
   return cached;
