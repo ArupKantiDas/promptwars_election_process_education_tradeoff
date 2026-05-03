@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "audit": "npm audit --audit-level=high --omit=dev",
     "seed": "node --env-file=.env.local --import tsx src/scripts/seed.ts",
-    "test": "node --import tsx --test src/services/missing.test.ts"
+    "test": "node --import tsx --test src/services/missing.test.ts src/llm/scoring.test.ts src/routes/classify.test.ts src/routes/extract.test.ts"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.9.0",
