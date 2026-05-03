@@ -9,7 +9,7 @@
 *.log
 
 # Editor and tooling
-.claude
+.agents
 .vscode
 .idea
 
