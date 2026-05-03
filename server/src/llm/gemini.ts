@@ -1,7 +1,9 @@
-// TODO Phase 10: migrate from deprecated @google-cloud/vertexai to @google/genai
-// Deprecation date: June 24 2025, removal date: June 24 2026
+// Migrated from the deprecated @google-cloud/vertexai SDK to @google/genai
+// (the unified Vertex AI + AI Studio SDK). Source-deprecation date for the
+// old SDK was June 24 2025; removal is June 24 2026.
 // Migration guide: https://cloud.google.com/vertex-ai/generative-ai/docs/deprecations/genai-vertexai-sdk
 
+import type { GoogleGenAI as GoogleGenAIType, Schema } from "@google/genai";
 import { logger } from "../logger.js";
 
 // Per AGENTS.md: "Gemini 2.5 Flash for all model calls." All Gemini access
@@ -34,6 +36,10 @@ class LiveGeminiClient implements GeminiClient {
   private readonly projectId: string;
   private readonly location: string;
   private readonly model: string;
+  // The @google/genai SDK is loaded lazily on first call so the local-mode
+  // pipeline does not pay the SDK init cost when no Vertex env is configured.
+  // Cached after first init so subsequent calls reuse the same client.
+  private aiPromise: Promise<GoogleGenAIType> | null = null;
 
   constructor(projectId: string, location: string, model: string) {
     this.projectId = projectId;
@@ -41,24 +47,22 @@ class LiveGeminiClient implements GeminiClient {
     this.model = model;
   }
 
+  private getAi(): Promise<GoogleGenAIType> {
+    if (this.aiPromise === null) {
+      this.aiPromise = (async () => {
+        const { GoogleGenAI } = await import("@google/genai");
+        return new GoogleGenAI({
+          vertexai: true,
+          project: this.projectId,
+          location: this.location
+        });
+      })();
+    }
+    return this.aiPromise;
+  }
+
   async callJson(parts: GeminiPromptParts): Promise<unknown> {
-    // Lazy-load @google-cloud/vertexai so the local-mode pipeline does not
-    // pay the SDK init cost when no Vertex env is configured.
-    const mod = await import("@google-cloud/vertexai");
-    const { VertexAI } = mod;
-    const vertex = new VertexAI({ project: this.projectId, location: this.location });
-    const generativeModel = vertex.getGenerativeModel({
-      model: this.model,
-      generationConfig: {
-        responseMimeType: "application/json",
-        // The Vertex SDK passes responseSchema through to the model. The
-        // schema enforces the output shape at decode time.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        responseSchema: parts.outputSchema as any,
-        temperature: 0
-      },
-      systemInstruction: { role: "system", parts: [{ text: parts.system }] }
-    });
+    const ai = await this.getAi();
     const userText = [
       "CONTEXT",
       parts.context,
@@ -66,12 +70,21 @@ class LiveGeminiClient implements GeminiClient {
       "INPUT",
       parts.input
     ].join("\n");
-    const result = await generativeModel.generateContent({
-      contents: [{ role: "user", parts: [{ text: userText }] }]
+    const response = await ai.models.generateContent({
+      model: this.model,
+      contents: userText,
+      config: {
+        systemInstruction: parts.system,
+        responseMimeType: "application/json",
+        // Caller-supplied schemas use the OpenAPI-style Type names
+        // ("OBJECT", "ARRAY", "STRING", "NUMBER", "INTEGER") which match
+        // the SDK's Schema enum. Cast through Schema to satisfy the typed
+        // SchemaUnion field.
+        responseSchema: parts.outputSchema as Schema,
+        temperature: 0
+      }
     });
-    const response = result.response;
-    const candidate = response.candidates?.[0];
-    const text = candidate?.content?.parts?.[0]?.text ?? "";
+    const text = response.text ?? "";
     try {
       return JSON.parse(text) as unknown;
     } catch (err) {
