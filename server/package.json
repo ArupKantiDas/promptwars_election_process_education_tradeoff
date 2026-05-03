@@ -7,6 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --env-file=.env.local --env-file-if-exists=../.env.local --import tsx --watch src/index.ts",
+    "start:ci": "node --env-file-if-exists=.env.local --env-file-if-exists=../.env.local --import tsx src/index.ts",
     "build": "tsc",
     "start": "node --env-file-if-exists=.env.local dist/index.js",
     "typecheck": "tsc --noEmit",

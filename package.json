@@ -13,7 +13,9 @@
     "server:dev": "npm --prefix server run dev",
     "server:build": "npm --prefix server run build",
     "server:start": "npm --prefix server start",
-    "seed": "tsx scripts/seed.ts"
+    "server:start:ci": "npm --prefix server run start:ci",
+    "seed": "tsx scripts/seed.ts",
+    "symmetry": "tsx lib/symmetry/cli.ts"
   },
   "dependencies": {
     "firebase": "^10.13.0",

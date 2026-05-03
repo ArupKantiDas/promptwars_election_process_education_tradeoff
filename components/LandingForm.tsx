@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { IssueId } from "@/lib/types/issues";
+import { CANONICAL_ISSUES } from "@/lib/types/issues";
 import { DEFAULT_CONSTITUENCY_ID, DEFAULT_STATE_CODE } from "@/lib/data/states";
+import {
+  readPrioritiesSelectionCache,
+  writePrioritiesSelectionCache
+} from "@/lib/pipelineStatus";
 import { IssueRanker } from "./IssueRanker";
 import { StateConstituencySelector } from "./StateConstituencySelector";
 
@@ -51,6 +56,27 @@ export function LandingForm() {
   const [constituencyId, setConstituencyId] = useState(DEFAULT_CONSTITUENCY_ID);
   const [priorities, setPriorities] = useState<readonly IssueId[]>([]);
 
+  // Restore the user's previous selection on back-navigation from
+  // /matrix. Done in an effect (not lazy useState init) to avoid
+  // hydration mismatch — server renders an empty form, the client
+  // hydrates with the same empty form, then restores from cache.
+  useEffect(() => {
+    const cached = readPrioritiesSelectionCache();
+    if (cached.length === 0) return;
+    const validIds = new Set(CANONICAL_ISSUES.map((i) => i.id));
+    const restored: IssueId[] = [];
+    for (const id of cached) {
+      if (validIds.has(id as IssueId)) restored.push(id as IssueId);
+    }
+    if (restored.length > 0) setPriorities(restored);
+  }, []);
+
+  // Persist on every change so back-nav from /matrix always sees the
+  // selection that produced the comparison.
+  useEffect(() => {
+    writePrioritiesSelectionCache(priorities);
+  }, [priorities]);
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (priorities.length < MIN_PRIORITIES_TO_SUBMIT) return;
@@ -89,7 +115,7 @@ export function LandingForm() {
         title={`Rank your top ${MAX_PRIORITIES} issues`}
         caption={`Add issues you care about, then drag or use the arrow buttons to put them in priority order. Submit with as few as ${MIN_PRIORITIES_TO_SUBMIT}; the matrix will show ${MAX_PRIORITIES} rows but the rest stay empty.`}
       >
-        <IssueRanker initialPriorities={priorities} onChange={setPriorities} />
+        <IssueRanker ranked={priorities} onChange={setPriorities} />
       </Section>
       <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-card-lifted backdrop-blur sm:flex-nowrap">
         <div className="min-w-0">

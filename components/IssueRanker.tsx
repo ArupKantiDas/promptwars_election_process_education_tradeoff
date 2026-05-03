@@ -6,9 +6,13 @@ import { CANONICAL_ISSUES, ISSUE_BY_ID } from "@/lib/types/issues";
 
 const MAX_PRIORITIES = 5;
 
+// Controlled component: parent owns the ranked array and gets every
+// change via onChange. Lifting the state up lets LandingForm hydrate
+// from sessionStorage on mount and propagate the cached selection down
+// without forcing an IssueRanker remount.
 type Props = {
-  initialPriorities?: readonly IssueId[];
-  onChange?: (priorities: readonly IssueId[]) => void;
+  ranked: readonly IssueId[];
+  onChange: (priorities: readonly IssueId[]) => void;
 };
 
 const DragHandle = () => (
@@ -27,10 +31,7 @@ const DragHandle = () => (
   </svg>
 );
 
-export function IssueRanker({ initialPriorities = [], onChange }: Props) {
-  const [ranked, setRanked] = useState<readonly IssueId[]>(() =>
-    initialPriorities.slice(0, MAX_PRIORITIES)
-  );
+export function IssueRanker({ ranked, onChange }: Props) {
   const [dragSourceIndex, setDragSourceIndex] = useState<number | null>(null);
 
   const available = useMemo<readonly Issue[]>(() => {
@@ -38,19 +39,14 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
     return CANONICAL_ISSUES.filter((i) => !rankedSet.has(i.id));
   }, [ranked]);
 
-  function commit(next: readonly IssueId[]) {
-    setRanked(next);
-    onChange?.(next);
-  }
-
   function add(id: IssueId) {
     if (ranked.length >= MAX_PRIORITIES) return;
     if (ranked.includes(id)) return;
-    commit([...ranked, id]);
+    onChange([...ranked, id]);
   }
 
   function remove(id: IssueId) {
-    commit(ranked.filter((r) => r !== id));
+    onChange(ranked.filter((r) => r !== id));
   }
 
   function moveUp(index: number) {
@@ -61,7 +57,7 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
     if (a === undefined || b === undefined) return;
     next[index - 1] = b;
     next[index] = a;
-    commit(next);
+    onChange(next);
   }
 
   function moveDown(index: number) {
@@ -72,7 +68,7 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
     if (a === undefined || b === undefined) return;
     next[index] = b;
     next[index + 1] = a;
-    commit(next);
+    onChange(next);
   }
 
   function reorder(from: number, to: number) {
@@ -82,7 +78,7 @@ export function IssueRanker({ initialPriorities = [], onChange }: Props) {
     const moved = next.splice(from, 1)[0];
     if (moved === undefined) return;
     next.splice(to, 0, moved);
-    commit(next);
+    onChange(next);
   }
 
   return (

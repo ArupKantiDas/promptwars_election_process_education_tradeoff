@@ -11,6 +11,7 @@ type Props = {
   extractPhase: Record<string, PhaseStatus>;
   classifyPhase: Record<string, PhaseStatus>;
   scorePhase: Record<string, PhaseStatus>;
+  done?: boolean;
 };
 
 const ARCHETYPE_ACCENT: Record<string, string> = {
@@ -124,7 +125,8 @@ export function PipelineProgress({
   priorities,
   extractPhase,
   classifyPhase,
-  scorePhase
+  scorePhase,
+  done = false
 }: Props) {
   const extractDone = candidates.filter(
     (c) => extractPhase[c.id] === "ready" || extractPhase[c.id] === "error"
@@ -153,19 +155,28 @@ export function PipelineProgress({
             id="pipeline-progress-heading"
             className="text-[15px] font-semibold tracking-tight text-slate-900"
           >
-            Building your matrix
+            {done ? "Comparison ready" : "Building your matrix"}
           </h2>
           <p className="mt-0.5 text-[12px] text-slate-600" role="status">
-            {activeLabel}
+            {done ? "All cells scored — scroll to explore." : activeLabel}
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-blue-800 ring-1 ring-blue-100">
-          <svg viewBox="0 0 16 16" className="h-3 w-3 animate-spin" fill="none">
-            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
-            <path d="M8 2 a 6 6 0 0 1 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          live
-        </span>
+        {done ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-200">
+            <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 6.5 L5 9.5 L10 3.5" />
+            </svg>
+            done
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-wider text-blue-800 ring-1 ring-blue-100">
+            <svg viewBox="0 0 16 16" className="h-3 w-3 animate-spin" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
+              <path d="M8 2 a 6 6 0 0 1 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            live
+          </span>
+        )}
       </header>
       <div className="grid gap-4 p-5 md:grid-cols-3">
         {/* Extract */}

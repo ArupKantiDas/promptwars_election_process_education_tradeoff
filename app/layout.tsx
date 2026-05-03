@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { NavBar } from "@/components/NavBar";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,13 +23,6 @@ export const metadata: Metadata = {
   description:
     "Compare candidates on the issues you actually care about, scored against a five-dimension rubric with verbatim citations. Built for the Anti-Gravity hackathon."
 };
-
-const NAV_ITEMS = [
-  { href: "/", label: "Pick priorities" },
-  { href: "/matrix", label: "Matrix" },
-  { href: "/missing", label: "What's missing" },
-  { href: "/journey", label: "Voter journey" }
-] as const;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -59,20 +54,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 manifesto literacy
               </span>
             </Link>
-            <nav aria-label="Primary">
-              <ul className="flex items-center gap-0.5 text-sm">
-                {NAV_ITEMS.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="rounded-md px-3 py-1.5 font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <Suspense fallback={null}>
+              <NavBar />
+            </Suspense>
           </div>
         </header>
         <div id="main-content">{children}</div>

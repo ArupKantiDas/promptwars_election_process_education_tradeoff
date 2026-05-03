@@ -11,10 +11,26 @@ import type {
 import { DIMENSION_ORDER, type ScoredCommitment } from "@/lib/types/scoring";
 import { apiClassifyBatched, apiExtract, apiScore } from "@/lib/api";
 import { computeMissingForCandidate } from "@/lib/missing";
+import {
+  clearPipelineState,
+  markPipelineComplete,
+  readMatrixCache,
+  writeMatrixCache,
+  type MatrixCacheValue
+} from "@/lib/pipelineStatus";
 import { ElectionFacts } from "./ElectionFacts";
 import { MatrixGrid } from "./MatrixGrid";
+import { MatrixReadyBanner } from "./MatrixReadyBanner";
 import { MissingPanel, type MissingEntry } from "./MissingPanel";
 import { PipelineProgress } from "./PipelineProgress";
+
+// PipelineProgress lifecycle after the pipeline finishes:
+// 1. allCellsSettled flips true → switch to "done" header label.
+// 2. Hold the done state for PROGRESS_DONE_HOLD_MS so the user notices it.
+// 3. Apply opacity-0 → animate fade-out for PROGRESS_DONE_FADE_MS.
+// 4. Unmount.
+const PROGRESS_DONE_HOLD_MS = 2_000;
+const PROGRESS_DONE_FADE_MS = 400;
 
 // Phase 7 — live matrix orchestrator.
 //
@@ -92,6 +108,16 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     initialScoreState(priorities)
   );
   const [firstCellScored, setFirstCellScored] = useState(false);
+  // PipelineProgress has its own visibility state machine because it
+  // needs to linger for a beat after the pipeline finishes (so the user
+  // sees the done state) and then fade out smoothly.
+  const [progressPhase, setProgressPhase] = useState<"running" | "done" | "fading" | "hidden">(
+    "running"
+  );
+  // Cached cells from a prior /matrix run with the same priority set.
+  // When non-null, the live pipeline is skipped entirely — the cells
+  // memo, MatrixGrid, and missing section all read from this instead.
+  const [cachedCells, setCachedCells] = useState<MatrixCacheValue | null>(null);
 
   // Pipeline timing instrumentation. pipelineStartRef captures the moment
   // the effect runs (= first extract call); firstScoredAtRef captures the
@@ -100,6 +126,28 @@ export function LiveMatrix({ candidates, priorities }: Props) {
   const firstScoredLoggedRef = useRef<boolean>(false);
 
   useEffect(() => {
+    const priorityIds = priorities.map((p) => p.id);
+
+    // Cache hit short-circuit: a prior /matrix run with this exact
+    // priority set already produced settled cells. Hydrate state and
+    // skip the pipeline. Banner is event-driven, so it stays hidden
+    // (no PIPELINE_COMPLETE_EVENT is dispatched here — the user is
+    // returning to a comparison they've already seen).
+    const cached = readMatrixCache(priorityIds);
+    if (cached !== null) {
+      setCachedCells(cached);
+      setProgressPhase("hidden");
+      return;
+    }
+
+    // Fresh run. Wipe any completion / dismissal flags from a previous
+    // session for this exact priority set so the banner only fires on
+    // the PIPELINE_COMPLETE_EVENT dispatched by markPipelineComplete
+    // during *this* mount.
+    setCachedCells(null);
+    setProgressPhase("running");
+    clearPipelineState(priorityIds);
+
     const controller = new AbortController();
     pipelineStartRef.current = performance.now();
     firstScoredLoggedRef.current = false;
@@ -199,8 +247,9 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     };
   }, [candidates, priorities]);
 
-  // Derive per-cell display state.
-  const cells = useMemo(() => {
+  // Derive per-cell display state from the live pipeline. On cache hit
+  // we ignore this and read from cachedCells instead (see `cells` below).
+  const livePipelineCells = useMemo(() => {
     const result: Record<string, Record<string, CellState>> = {};
     for (const issue of priorities) {
       result[issue.id] = {};
@@ -242,26 +291,107 @@ export function LiveMatrix({ candidates, priorities }: Props) {
     return result;
   }, [classifyByCandidate, scoreByIssue, candidates, priorities]);
 
+  const cells = cachedCells ?? livePipelineCells;
+
   const missingByCandidate = useMemo(() => {
-    const top = priorities.slice(0, TOP_PRIORITIES_FOR_MISSING).map((p) => p.id);
+    const top = priorities.slice(0, TOP_PRIORITIES_FOR_MISSING);
     const out: Record<string, MissingEntry[]> = {};
+
+    // Cache-hit path: derive missing from settled cells. An "empty" cell
+    // in a top-3 priority means the candidate has no scored commitment
+    // for that issue. We only cache successful runs (no errors), so an
+    // empty cell here unambiguously means "did not address" — same
+    // semantics the live path computes via classifyByCandidate.
+    if (cachedCells !== null) {
+      for (const c of candidates) {
+        const entries: MissingEntry[] = [];
+        for (const p of top) {
+          const cell = cachedCells[p.id]?.[c.id];
+          if (cell?.kind === "empty") {
+            entries.push({ candidate: c, issue: p });
+          }
+        }
+        out[c.id] = entries;
+      }
+      return out;
+    }
+
+    // Live path: read directly from classify results, which distinguish
+    // "no commitment classified" from "score errored after classify hit".
+    const topIds = top.map((p) => p.id);
     for (const c of candidates) {
       const cs = classifyByCandidate[c.id];
       if (cs?.status !== "ready") {
         out[c.id] = [];
         continue;
       }
-      out[c.id] = computeMissingForCandidate(cs.classified, top).map((m) => ({
+      out[c.id] = computeMissingForCandidate(cs.classified, topIds).map((m) => ({
         candidate: c,
         issue: m.issue
       }));
     }
     return out;
-  }, [classifyByCandidate, candidates, priorities]);
+  }, [cachedCells, classifyByCandidate, candidates, priorities]);
 
-  const allClassifyReady = candidates.every(
-    (c) => classifyByCandidate[c.id]?.status === "ready"
-  );
+  // On cache hit, classify state is empty but the missing section should
+  // still render real entries instead of the "Computing…" placeholder.
+  const allClassifyReady =
+    cachedCells !== null ||
+    candidates.every((c) => classifyByCandidate[c.id]?.status === "ready");
+
+  // Pipeline is "complete" when every cell has settled into "scored" or
+  // "empty" — no more loading states. NavBar reads this via sessionStorage
+  // to decide whether to enable the "What's missing" link.
+  const allCellsSettled = useMemo(() => {
+    for (const issue of priorities) {
+      for (const c of candidates) {
+        const cell = cells[issue.id]?.[c.id];
+        if (cell === undefined || cell.kind === "loading") return false;
+      }
+    }
+    return true;
+  }, [cells, priorities, candidates]);
+
+  // Did any phase of the live pipeline end in error? Used to gate the
+  // cache write — caching errored runs would hide real failures behind
+  // an instant load on the next visit. Cache-hit runs don't reach this
+  // path because allCellsSettled is computed from cached cells (no
+  // errors possible).
+  const livePipelineHadErrors = useMemo(() => {
+    for (const c of candidates) {
+      if (extractByCandidate[c.id]?.status === "error") return true;
+      if (classifyByCandidate[c.id]?.status === "error") return true;
+    }
+    for (const p of priorities) {
+      if (scoreByIssue[p.id]?.status === "error") return true;
+    }
+    return false;
+  }, [extractByCandidate, classifyByCandidate, scoreByIssue, candidates, priorities]);
+
+  useEffect(() => {
+    if (!allCellsSettled) return;
+    // Skip the "ready" beat + cache write when restoring from cache —
+    // the user is returning to a comparison they've already seen.
+    if (cachedCells !== null) {
+      setProgressPhase("hidden");
+      return;
+    }
+    markPipelineComplete(priorities.map((p) => p.id));
+    if (!livePipelineHadErrors) {
+      writeMatrixCache(priorities.map((p) => p.id), livePipelineCells);
+    }
+    setProgressPhase((prev) => (prev === "running" ? "done" : prev));
+    const fadeStart = window.setTimeout(() => {
+      setProgressPhase((prev) => (prev === "done" ? "fading" : prev));
+    }, PROGRESS_DONE_HOLD_MS);
+    const hide = window.setTimeout(() => {
+      setProgressPhase((prev) => (prev === "fading" ? "hidden" : prev));
+    }, PROGRESS_DONE_HOLD_MS + PROGRESS_DONE_FADE_MS);
+    return () => {
+      window.clearTimeout(fadeStart);
+      window.clearTimeout(hide);
+    };
+  }, [allCellsSettled, priorities, cachedCells, livePipelineHadErrors, livePipelineCells]);
 
   // Detect first-scored-cell once per mount. Drives both the perf log and
   // the conditional collapse of the PipelineProgress / ElectionFacts panel.
@@ -320,14 +450,22 @@ export function LiveMatrix({ candidates, priorities }: Props) {
 
   return (
     <>
-      {!firstCellScored && (
-        <div className="mb-6 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+      <MatrixReadyBanner priorityIds={priorities.map((p) => p.id)} />
+      {progressPhase !== "hidden" && (
+        <div
+          className={`mb-6 grid gap-4 transition-opacity ease-out lg:grid-cols-[1.6fr_1fr] ${
+            progressPhase === "fading" ? "opacity-0" : "opacity-100"
+          }`}
+          style={{ transitionDuration: `${PROGRESS_DONE_FADE_MS}ms` }}
+          aria-hidden={progressPhase === "fading" ? "true" : undefined}
+        >
           <PipelineProgress
             candidates={candidates}
             priorities={priorities}
             extractPhase={extractPhase}
             classifyPhase={classifyPhase}
             scorePhase={scorePhase}
+            done={progressPhase === "done" || progressPhase === "fading"}
           />
           <ElectionFacts />
         </div>
